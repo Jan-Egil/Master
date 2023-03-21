@@ -27,7 +27,7 @@ dims_array = np.arange(3,30)
 prcnt2_array = np.zeros(dims_array.shape[0])
 prcnt6_array = np.zeros(dims_array.shape[0])
 
-iters = 1
+iters = 10
 
 for i, dims in enumerate(tqdm(dims_array)):
     sum2 = 0
@@ -88,8 +88,7 @@ plt.plot(dims_array, prcnt6_array, label="LDA, 6 class")
 
 plt.xlabel("Dimensions")
 plt.ylabel("% Accuracy")
-plt.title("% Accuracy vs dimension using PCA feature projection")
+plt.title(f"% Accuracy vs dimension using PCA feature projection.\n{iters} iterations per dimension")
 
 plt.legend()
-plt.grid()
 plt.show()
