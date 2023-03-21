@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from sklearn import svm
 
+
 class Data_Classifier:
     def __init__(self,
                  input,
@@ -21,10 +22,17 @@ class Data_Classifier:
         self.X_test, 
         self. Y_train, 
         self.Y_test) = train_test_split(input, output, test_size=test_size)
-        sns.set_theme()
-        sns.set_style('white')
 
     def scale(self):
+        """
+        Scale the data using the SKLearn Standard Scaler
+        
+        Input:
+            - None
+        Output:
+            - None
+        """
+
         sc = StandardScaler()
         self.X_train = sc.fit_transform(self.X_train)
         self.X_test = sc.transform(self.X_test)
@@ -32,6 +40,15 @@ class Data_Classifier:
     def decompose(self,
                   algo = 'PCA',
                   dims = 3):
+        """
+        Reduce the dimensionality
+        Input:
+            - algo (str, Default: 'PCA'): The dimensionality reduction technique to be used
+            - dims (int, Default: 3): The number of dimensions we want to reduce to
+        Output:
+            - None
+        """
+
         if algo == 'PCA':
             reducer = PCA(n_components=dims)
         else:
@@ -43,6 +60,17 @@ class Data_Classifier:
     def classify(self,
                  classifier = 'SVM',
                  deg = 3):
+        """
+        Classify the test-data using a classifier
+        
+        Input:
+            - Classifier (str, Default: 'SVM'): The classifier to use when predicting data {'SVM', 'SVM_rbf', 'SVM_linear', 'SVM_poly', 'poly', 'LDA'}
+            - deg (int, default: 3): The degree of polynomial when using the 'poly' SVC-kernel
+        Output:
+            - self.pred (Array-like): Predicted values of data
+            - self.Y_test (Array-like): Actual values of data
+        """
+
         if classifier == 'SVM' or classifier == 'SVM_rbf':
             self.clf = svm.SVC()
         elif classifier == 'SVM_linear':
@@ -57,9 +85,34 @@ class Data_Classifier:
         self.clf.fit(self.X_train, self.Y_train)
         self.pred = self.clf.predict(self.X_test)
 
-        return self.pred
-    
+        return self.pred, self.Y_test
+
+    def accuracy(self):
+        """
+        Get the accuracy of the model
+        
+        Input:
+            - None
+        Output:
+            - prcnt (float): Percentage of predicted values being correct
+        """
+
+        amt_corr = np.equal(self.Y_test, self.pred).sum()
+        prcnt = 100*amt_corr/self.Y_test.shape[0]
+        return prcnt
+
     def plot_matrix(self):
+        """
+        Plot the confusion matrix of the results. Also prints it to console
+        
+        Input:
+            - None
+        Output:
+            - None (but a plot pops up!)
+        """
+
+        sns.set_theme()
+
         mat = confusion_matrix(self.Y_test, self.pred)
         print(mat)
 
@@ -90,110 +143,3 @@ if __name__ == "__main__":
     DC.decompose(algo='PCA', dims=10)
     DC.classify(classifier='LDA')
     DC.plot_matrix()
-
-
-"""
-sc = StandardScaler()
-path_feats = '/scratch/oath_v1.1/features/auroral_feat.h5'
-path_classification = '/scratch/oath_v1.1/classifications/classifications.csv'
-
-with h5py.File(path_feats, 'r') as f:
-    feats = f['Logits'][:]
-
-df = pd.read_csv(path_classification, header=16)
-aurora_binary = np.array(df['class2'])
-aurora_type = np.array(df['class6'])
-"""
-"""
-num_components = np.arange(2,30)
-#num_components = np.array([20])
-prcnt_array = np.zeros(num_components.shape[0])
-
-iters = 5
-
-for i, dims in enumerate(tqdm(num_components)):
-    sum = 0
-    for j in range(iters):
-        reducer = PCA(n_components = dims)
-        
-        feats_train, feats_test, abin_train, abin_test = train_test_split(feats, aurora_binary, test_size = 0.2)
-        #feats_train, feats_test, abin_train, abin_test = train_test_split(feats, aurora_type, test_size=0.2)
-        feats_train = sc.fit_transform(feats_train)
-        feats_test = sc.transform(feats_test)
-
-        feats_train = reducer.fit_transform(feats_train)
-        feats_test = reducer.transform(feats_test)
-
-        clf = svm.SVC()
-        clf.fit(feats_train, abin_train)
-
-        pred = clf.predict(feats_test)
-        mat = confusion_matrix(abin_test, pred)
-        
-"""
-"""
-        amt_corr = 0
-        for k in range(3):
-            for l in range(3):
-                amt_corr += mat[k][l]
-                amt_corr += mat[k+3][l+3]
-        sum += amt_corr/abin_test.shape[0]
-"""
-"""
-
-        amt_corr = np.equal(abin_test, pred).sum()
-        sum += amt_corr/abin_test.shape[0]
-    sum /= iters
-    prcnt_array[i] = sum
-
-
-plt.plot(num_components, prcnt_array)
-plt.grid()
-plt.xlabel("Num dims")
-plt.ylabel("Percent")
-plt.show()
-"""
-"""
-iters = 100
-
-prcnt_array = np.zeros(iters)
-
-for i in tqdm(range(iters)):
-    #feats_train, feats_test, abin_train, abin_test = train_test_split(feats, aurora_binary, test_size=0.2)
-    feats_train, feats_test, abin_train, abin_test = train_test_split(feats, aurora_type, test_size=0.2)    
-
-    clf = LDA()
-    clf.fit(feats_train, abin_train)
-
-    pred = clf.predict(feats_test)
-    mat = confusion_matrix(abin_test, pred)
-    amt_corr = np.equal(abin_test, pred).sum()
-    prcnt = amt_corr/abin_test.shape[0]
-    prcnt_array[i] = prcnt
-    #print(prcnt)
-    #print(mat)
-
-print(np.mean(prcnt_array))
-print(np.std(prcnt_array))
-
-#for i in range(abin_test.shape[0]):
-#    print(abin_test[i] == pred[i])
-
-#print(np.equal(abin_test, pred))
-"""
-"""
-xs = feats[:,0]#[:100]
-ys = feats[:,1]#[:100]
-zs = feats[:,2]#[:100]
-
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
-
-ax.scatter(xs, ys, zs)
-
-ax.set_xlabel("PC1")
-ax.set_ylabel("PC2")
-ax.set_zlabel("PC3")
-
-plt.show()
-"""
