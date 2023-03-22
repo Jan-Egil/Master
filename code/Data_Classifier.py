@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn import svm
 
 
@@ -101,6 +101,21 @@ class Data_Classifier:
         prcnt = 100*amt_corr/self.Y_test.shape[0]
         return prcnt
 
+    def plot_matrix_2(self):
+        """
+        Plot the confusion matrix of the results. This plot is neater
+        
+        Input:
+            - None
+        Output:
+            - None (but a cute plot pops up)
+        """
+        
+        mat = confusion_matrix(self.Y_test, self.pred)
+        disp = ConfusionMatrixDisplay(confusion_matrix=mat, display_labels=self.clf.classes_)
+        disp.plot()
+        plt.show()
+
     def plot_matrix(self):
         """
         Plot the confusion matrix of the results. Also prints it to console
@@ -142,4 +157,4 @@ if __name__ == "__main__":
     DC.scale()
     DC.decompose(algo='PCA', dims=10)
     DC.classify(classifier='LDA')
-    DC.plot_matrix()
+    DC.plot_matrix_2()
