@@ -2,8 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 
+from Data_Classifier import Data_Classifier
+
 
 yearmonth = ['201011', '201012', '201101', '201102']
+dims = 30
 
 path_feats1 = '/scratch/oath_v1.1/features/auroral_feat.h5'
 path_classification = '/scratch/oath_v1.1/classifications/classifications.csv'
@@ -13,7 +16,6 @@ path_feats2 = '/scratch/asim/' + yearmonth[0] + ".hdf"
 """
 Train classifier
 """
-
 
 
 """

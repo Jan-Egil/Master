@@ -1,2 +1,7 @@
-# DAAID
-Detecting Auroral Activity in Image Data 
+# MASTER
+
+
+MASTER
+
+
+MASTER OF PHYSICS IS COMING YOUR WAY
