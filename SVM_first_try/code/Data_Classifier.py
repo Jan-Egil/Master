@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score
 from sklearn import svm
 
 
@@ -100,6 +100,10 @@ class Data_Classifier:
         amt_corr = np.equal(self.Y_test, self.pred).sum()
         prcnt = 100*amt_corr/self.Y_test.shape[0]
         return prcnt
+    
+    def precision(self):
+        prec = precision_score(self.Y_test, self.pred)
+        return prec
 
     def plot_matrix_2(self):
         """
