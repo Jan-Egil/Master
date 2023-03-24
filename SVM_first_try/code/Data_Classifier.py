@@ -6,10 +6,10 @@ import seaborn as sns
 from tqdm import tqdm
 
 from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, KernelPCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score, recall_score, f1_score
 from sklearn import svm
 
 
@@ -17,11 +17,14 @@ class Data_Classifier:
     def __init__(self,
                  input,
                  output,
-                 test_size = 0.2):
+                 test_size = 0.2,
+                 average='micro'):
+        self.test_size = test_size
+        self.average = average
         (self.X_train, 
         self.X_test, 
         self. Y_train, 
-        self.Y_test) = train_test_split(input, output, test_size=test_size)
+        self.Y_test) = train_test_split(input, output, test_size=self.test_size)
 
     def scale(self):
         """
@@ -39,7 +42,8 @@ class Data_Classifier:
 
     def decompose(self,
                   algo = 'PCA',
-                  dims = 3):
+                  dims = 3,
+                  kernel = 'linear'):
         """
         Reduce the dimensionality
         Input:
@@ -51,6 +55,8 @@ class Data_Classifier:
 
         if algo == 'PCA':
             reducer = PCA(n_components=dims)
+        elif algo == 'KernelPCA':
+            reducer = KernelPCA(n_components=dims, kernel=kernel)
         else:
             raise ValueError(f"The given algorithm ({algo}) does not exist")
         
@@ -102,8 +108,16 @@ class Data_Classifier:
         return prcnt
     
     def precision(self):
-        prec = precision_score(self.Y_test, self.pred)
+        prec = precision_score(self.Y_test, self.pred, average = self.average)
         return prec
+    
+    def recall(self):
+        rec = recall_score(self.Y_test, self.pred, average = self.average)
+        return rec
+    
+    def F1(self):
+        score = f1_score(self.Y_test, self.pred, average = self.average)
+        return score
 
     def plot_matrix_2(self):
         """
