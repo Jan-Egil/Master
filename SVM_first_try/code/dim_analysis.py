@@ -45,11 +45,17 @@ f1_6_array_classifier1 = np.zeros(dims_array.shape[0])
 f1_2_array_classifier2 = np.zeros(dims_array.shape[0])
 f1_6_array_classifier2 = np.zeros(dims_array.shape[0])
 
-iters = 1
+std_2_array_classifier1 = np.zeros(dims_array.shape[0])
+std_6_array_classifier1 = np.zeros(dims_array.shape[0])
+std_2_array_classifier2 = np.zeros(dims_array.shape[0])
+std_6_array_classifier2 = np.zeros(dims_array.shape[0])
+
+iters = 10
 
 """
 Classifier 1
 """
+
 for i, dims in enumerate(tqdm(dims_array)):
     prcntsum2 = 0
     prcntsum6 = 0
@@ -59,6 +65,8 @@ for i, dims in enumerate(tqdm(dims_array)):
     rec6sum = 0
     f12sum = 0
     f16sum = 0
+    std2 = np.zeros(iters)
+    std6 = np.zeros(iters)
     for j in range(iters):
         DC2 = Data_Classifier(features, aurora_binary)
         DC6 = Data_Classifier(features, aurora_class)
@@ -76,6 +84,8 @@ for i, dims in enumerate(tqdm(dims_array)):
         prcnt6 = DC6.accuracy()
         prcntsum2 += prcnt2
         prcntsum6 += prcnt6
+        std2[j] = prcnt2
+        std6[j] = prcnt6
 
         prec2 = DC2.precision()
         prec6 = DC6.precision()
@@ -93,6 +103,8 @@ for i, dims in enumerate(tqdm(dims_array)):
         f16sum += f16
     prcnt2_array_classifier1[i] = prcntsum2/iters
     prcnt6_array_classifier1[i] = prcntsum6/iters
+    std_2_array_classifier1[i] = np.std(std2)
+    std_6_array_classifier1[i] = np.std(std6)
     precision2_array_classifier1[i] = prec2sum/iters
     precision6_array_classifier1[i] = prec6sum/iters
     recall2_array_classifier1[i] = rec2sum/iters
@@ -112,6 +124,8 @@ for i, dims in enumerate(tqdm(dims_array)):
     rec6sum = 0
     f12sum = 0
     f16sum = 0
+    std2 = np.zeros(iters)
+    std6 = np.zeros(iters)
     for j in range(iters):
         DC2 = Data_Classifier(features, aurora_binary)
         DC6 = Data_Classifier(features, aurora_class)
@@ -129,6 +143,8 @@ for i, dims in enumerate(tqdm(dims_array)):
         prcnt6 = DC6.accuracy()
         prcntsum2 += prcnt2
         prcntsum6 += prcnt6
+        std2[j] = prcnt2
+        std6[j] = prcnt6
 
         prec2 = DC2.precision()
         prec6 = DC6.precision()
@@ -146,6 +162,8 @@ for i, dims in enumerate(tqdm(dims_array)):
         f16sum += f16
     prcnt2_array_classifier2[i] = prcntsum2/iters
     prcnt6_array_classifier2[i] = prcntsum6/iters
+    std_2_array_classifier2[i] = np.std(std2)
+    std_6_array_classifier2[i] = np.std(std6)
     precision2_array_classifier2[i] = prec2sum/iters
     precision6_array_classifier2[i] = prec6sum/iters
     recall2_array_classifier2[i] = rec2sum/iters
@@ -191,6 +209,16 @@ plt.plot(dims_array, f1_6_array_classifier2, label="LDA, 6 class")
 plt.xlabel("Dimensions")
 plt.ylabel("F1 score (precision*recall/(precision+recall)")
 plt.title(f"F1 score vs dimension using PCA feature projection.\n{iters} iterations per dimension")
+plt.legend()
+
+plt.figure()
+plt.plot(dims_array, std_2_array_classifier1, label="SVM, 2 class")
+plt.plot(dims_array, std_6_array_classifier1, label="SVM, 6 class")
+plt.plot(dims_array, std_2_array_classifier2, label="LDA, 2 class")
+plt.plot(dims_array, std_6_array_classifier2, label="LDA, 6 class")
+plt.xlabel("Dimensions")
+plt.ylabel("STD accuracy")
+plt.title(f"STD vs dimension using PCA feature projection.\n{iters} iterations per dimension")
 plt.legend()
 
 plt.show()

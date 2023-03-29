@@ -11,6 +11,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score, recall_score, f1_score
 from sklearn import svm
+from sklearn.linear_model import Ridge
 
 
 class Data_Classifier:
