@@ -66,13 +66,16 @@ class Data_Classifier:
     
     def classify(self,
                  classifier = 'SVM',
-                 deg = 3):
+                 deg = 3,
+                 C = 1,
+                 gamma='scale'):
         """
         Classify the test-data using a classifier
         
         Input:
             - Classifier (str, Default: 'SVM'): The classifier to use when predicting data {'SVM', 'SVM_rbf', 'SVM_linear', 'SVM_poly', 'poly', 'LDA'}
             - deg (int, default: 3): The degree of polynomial when using the 'poly' SVC-kernel
+            - gamma ({'scale', 'auto'} or float): The kernel coefficient for rbf, poly and sigmoid
         Output:
             - self.pred (Array-like): Predicted values of data
             - self.Y_test (Array-like): Actual values of data
