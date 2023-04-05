@@ -14,12 +14,10 @@ path_processed_imgs = '/scratch/SOPP/processed_imgs/'
 # Fetch information about processing said image
 
 df = pd.read_csv(path_img_info, header=16)
-print(df)
 rot_angle = np.array(df['rotAng'])
-print(rot_angle)
 
 # Fetch image from path. Apply rotation. Place image in new path
-png = '.png'
+
 for i in tqdm(range(rot_angle.shape[0])):
     filename = str(i+1).zfill(5) + '.png'
     full_path_fetch = path_unprocessed_imgs + filename
