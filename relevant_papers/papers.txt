@@ -1,0 +1,1 @@
+ShuffleNet V2 paper: https://arxiv.org/abs/1807.11164
