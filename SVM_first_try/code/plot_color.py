@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-dims_array = np.load('dims_array.npy')#np.array([3,5,10])#,15,20])
-C_param_array = np.load('C_param_array.npy')#np.logspace(-10,3,10)
-gamma_param_array = np.load('gamma_param_array.npy')#np.logspace(-10,3,10)
+dims_array = np.load('dims_array.npy')
+C_param_array = np.load('C_param_array.npy')
+gamma_param_array = np.load('gamma_param_array.npy')
 errorresult2 = np.load('errorresult2.npy')
 errorresult6 = np.load('errorresult6.npy')
 

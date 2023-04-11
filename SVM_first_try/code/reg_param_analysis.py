@@ -4,12 +4,15 @@ import matplotlib.pyplot as plt
 import h5py
 import seaborn as sns
 from tqdm import tqdm
+import os
 
 from Data_Classifier import Data_Classifier
 
+os.chdir('../..')
+base_dir = os.getcwd()
 
-path_feats = '/scratch/oath_v1.1/features/auroral_feat.h5'
-path_classification = '/scratch/oath_v1.1/classifications/classifications.csv'
+path_feats = base_dir + '/data/auroral_feat.h5'
+path_classification = base_dir + '/data/classifications.csv'
 
 with h5py.File(path_feats, 'r') as f:
     features = f['Logits'][:]
