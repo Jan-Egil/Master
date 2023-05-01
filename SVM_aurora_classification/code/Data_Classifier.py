@@ -46,7 +46,8 @@ class Data_Classifier:
                   dims = 3,
                   kernel = 'linear'):
         """
-        Reduce the dimensionality
+        Reduce the dimensionality of the feature space
+        
         Input:
             - algo (str, Default: 'PCA'): The dimensionality reduction technique to be used
             - dims (int, Default: 3): The number of dimensions we want to reduce to
