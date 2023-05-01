@@ -10,5 +10,8 @@ from Data_Classifier import Data_Classifier, Feature_Extractor
 os.chdir('../..')
 base_dir = os.getcwd()
 data_dir = base_dir + '/data'
+pic_dir = '/scratch/SOPP/processed_imgs'
 
-print(data_dir)
+for picnum in range(1,5825):
+    filename = str(picnum+1).zfill(5) + ".png"
+    print(filename)
