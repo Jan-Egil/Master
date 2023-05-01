@@ -13,6 +13,10 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_
 from sklearn import svm
 from sklearn.linear_model import Ridge
 
+class Feature_Extractor:
+    def __init__(self,
+                 directory):
+        self.directory = directory
 
 class Data_Classifier:
     def __init__(self,
