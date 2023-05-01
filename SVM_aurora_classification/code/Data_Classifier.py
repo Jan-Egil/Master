@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from PIL import Image
 from tqdm import tqdm
 
 from sklearn.preprocessing import StandardScaler
@@ -13,10 +14,52 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_
 from sklearn import svm
 from sklearn.linear_model import Ridge
 
+import torch
+from torchvision import transforms
+from torchvision.models import shufflenet_v2_x1_0
+from torchvision.models.feature_extraction import get_graph_node_names
+from torchvision.models.feature_extraction import create_feature_extractor
+
 class Feature_Extractor:
     def __init__(self,
-                 directory):
+                 directory,
+                 filenames,
+                 path_feats):
         self.directory = directory
+        self.filenames = filenames
+        self.path_feats = path_feats
+    
+    def extract_features(self, model_name='shufflenet_v2_x1_0'):
+        if model_name == 'shufflenet_v2_x1_0':
+            model = shufflenet_v2_x1_0(weights=None)
+            preproc = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], 
+                                     std=[0.229, 0.224, 0.225])])
+            num_feats = 1000
+            model_feat_extractor = create_feature_extractor(model, return_nodes=['fc'])
+        else:
+            raise ValueError(f"The given model ({model_name}) is not a valid option")
+        
+        num_pics = len(self.filenames)
+        feats = np.zeros([num_pics,num_feats], dtype=np.float32)
+
+        print(f"\nStarting feature extraction for model: {model_name}")
+        for i, img in enumerate(tqdm(self.filenames)):
+            full_path = self.directory + img
+            with Image.open(full_path) as im:
+                image_tensor = preproc(im)
+                image_batch = image_tensor.unsqueeze(0)
+
+                pic_feats = model_feat_extractor(image_batch)
+                array_feats = pic_feats['fc'].detach().numpy()
+                feats[i] = array_feats
+
+        hf = h5py.File(self.path_feats, 'w')
+        hf.create_dataset('features', data=feats)
+        hf.close()
 
 class Data_Classifier:
     def __init__(self,
@@ -171,17 +214,4 @@ class Data_Classifier:
 
 
 if __name__ == "__main__":
-    path_feats = '/scratch/oath_v1.1/features/auroral_feat.h5'
-    path_classification = '/scratch/oath_v1.1/classifications/classifications.csv'
-
-    with h5py.File(path_feats, 'r') as f:
-        feats = f['Logits'][:]
-    
-    df = pd.read_csv(path_classification, header=16)
-    classified_aurora = np.array(df['class6'])
-
-    DC = Data_Classifier(feats, classified_aurora)
-    DC.scale()
-    DC.decompose(algo='PCA', dims=10)
-    DC.classify(classifier='LDA')
-    DC.plot_matrix_2()
+    ...
