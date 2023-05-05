@@ -11,11 +11,11 @@ os.chdir('../..')
 base_dir = os.getcwd()
 data_dir = base_dir + '/data/SVM_aurora_classification'
 feat_path = data_dir + '/shufflenet/auroral_feat.h5'
-pic_dir = '/scratch/SOPP/processed_imgs/'
+pic_dir = '/scratch/oath_v1.1/images/cropped_scaled_rotated/'
 classification_path = data_dir + '/classifications.csv'
 
 # Uncomment if you want to extract features as well
-"""
+
 filename_list = []
 
 for picnum in range(1,5825):
@@ -24,7 +24,7 @@ for picnum in range(1,5825):
 
 feature_extraction = Feature_Extractor(pic_dir, filename_list, feat_path)
 feature_extraction.extract_features(model_name='shufflenet_v2_x1_0')
-"""
+
 
 classifier1 = 'SVM'
 classifier2 = 'LDA'
@@ -36,7 +36,7 @@ df = pd.read_csv(classification_path, header=16)
 aurora_binary = np.array(df['class2'])
 aurora_class = np.array(df['class6'])
 
-dims_array = np.arange(3,1000,100)
+dims_array = np.arange(10,1000,100)
 
 prcnt2_array_classifier1 = np.zeros(dims_array.shape[0])
 prcnt6_array_classifier1 = np.zeros(dims_array.shape[0])
