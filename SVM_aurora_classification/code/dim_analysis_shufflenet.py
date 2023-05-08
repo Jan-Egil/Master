@@ -10,9 +10,11 @@ from Data_Classifier import Data_Classifier, Feature_Extractor
 os.chdir('../..')
 base_dir = os.getcwd()
 data_dir = base_dir + '/data/SVM_aurora_classification'
-feat_path = data_dir + '/shufflenet/auroral_feat.h5'
+#feat_path = data_dir + '/shufflenet/auroral_feat.h5'
+feat_path = '/scratch/oath_v1.1/features/auroral_feat.h5'
 pic_dir = '/scratch/oath_v1.1/images/cropped_scaled_rotated/'
 classification_path = data_dir + '/classifications.csv'
+
 
 # Uncomment if you want to extract features as well
 
@@ -23,20 +25,21 @@ for picnum in range(1,5825):
     filename_list.append(filename)
 
 feature_extraction = Feature_Extractor(pic_dir, filename_list, feat_path)
-feature_extraction.extract_features(model_name='shufflenet_v2_x1_0')
+feature_extraction.extract_features(model_name='inception_v3')
 
 
 classifier1 = 'SVM'
-classifier2 = 'LDA'
+classifier2 = 'Ridge'
 
 with h5py.File(feat_path, 'r') as f:
     features = f['features'][:]
+    #features = f['Logits'][:]
 
 df = pd.read_csv(classification_path, header=16)
 aurora_binary = np.array(df['class2'])
 aurora_class = np.array(df['class6'])
 
-dims_array = np.arange(10,1000,100)
+dims_array = np.arange(2,30)
 
 prcnt2_array_classifier1 = np.zeros(dims_array.shape[0])
 prcnt6_array_classifier1 = np.zeros(dims_array.shape[0])
@@ -63,7 +66,7 @@ std_6_array_classifier1 = np.zeros(dims_array.shape[0])
 std_2_array_classifier2 = np.zeros(dims_array.shape[0])
 std_6_array_classifier2 = np.zeros(dims_array.shape[0])
 
-iters = 1
+iters = 10
 
 """
 Classifier 1
@@ -185,50 +188,50 @@ for i, dims in enumerate(tqdm(dims_array)):
     f1_6_array_classifier2[i] = f16sum/iters
 
 plt.figure()
-plt.plot(dims_array, prcnt2_array_classifier1, label="SVM, 2 class")
-plt.plot(dims_array, prcnt6_array_classifier1, label="SVM, 6 class")
-plt.plot(dims_array, prcnt2_array_classifier2, label="LDA, 2 class")
-plt.plot(dims_array, prcnt6_array_classifier2, label="LDA, 6 class")
+plt.plot(dims_array, prcnt2_array_classifier1, label=f"{classifier1}, 2 class")
+plt.plot(dims_array, prcnt6_array_classifier1, label=f"{classifier1}, 6 class")
+plt.plot(dims_array, prcnt2_array_classifier2, label=f"{classifier2}, 2 class")
+plt.plot(dims_array, prcnt6_array_classifier2, label=f"{classifier2}, 6 class")
 plt.xlabel("Dimensions")
 plt.ylabel("% Accuracy")
 plt.title(f"% Accuracy vs dimension using PCA feature projection.\n{iters} iterations per dimension")
 plt.legend()
 
 plt.figure()
-plt.plot(dims_array, precision2_array_classifier1, label="SVM, 2 class")
-plt.plot(dims_array, precision6_array_classifier1, label="SVM, 6 class")
-plt.plot(dims_array, precision2_array_classifier2, label="LDA, 2 class")
-plt.plot(dims_array, precision6_array_classifier2, label="LDA, 6 class")
+plt.plot(dims_array, precision2_array_classifier1, label=f"{classifier1}, 2 class")
+plt.plot(dims_array, precision6_array_classifier1, label=f"{classifier1}, 6 class")
+plt.plot(dims_array, precision2_array_classifier2, label=f"{classifier2}, 2 class")
+plt.plot(dims_array, precision6_array_classifier2, label=f"{classifier2}, 6 class")
 plt.xlabel("Dimensions")
 plt.ylabel("Precision (tp/(tp+fp)")
 plt.title(f"Precision vs dimension using PCA feature projection.\n{iters} iterations per dimension")
 plt.legend()
 
 plt.figure()
-plt.plot(dims_array, recall2_array_classifier1, label="SVM, 2 class")
-plt.plot(dims_array, recall6_array_classifier1, label="SVM, 6 class")
-plt.plot(dims_array, recall2_array_classifier2, label="LDA, 2 class")
-plt.plot(dims_array, recall6_array_classifier2, label="LDA, 6 class")
+plt.plot(dims_array, recall2_array_classifier1, label=f"{classifier1}, 2 class")
+plt.plot(dims_array, recall6_array_classifier1, label=f"{classifier1}, 6 class")
+plt.plot(dims_array, recall2_array_classifier2, label=f"{classifier2}, 2 class")
+plt.plot(dims_array, recall6_array_classifier2, label=f"{classifier2}, 6 class")
 plt.xlabel("Dimensions")
 plt.ylabel("Recall (tp/(tp+fn)")
 plt.title(f"Recall vs dimension using PCA feature projection.\n{iters} iterations per dimension")
 plt.legend()
 
 plt.figure()
-plt.plot(dims_array, f1_2_array_classifier1, label="SVM, 2 class")
-plt.plot(dims_array, f1_6_array_classifier1, label="SVM, 6 class")
-plt.plot(dims_array, f1_2_array_classifier2, label="LDA, 2 class")
-plt.plot(dims_array, f1_6_array_classifier2, label="LDA, 6 class")
+plt.plot(dims_array, f1_2_array_classifier1, label=f"{classifier1}, 2 class")
+plt.plot(dims_array, f1_6_array_classifier1, label=f"{classifier1}, 6 class")
+plt.plot(dims_array, f1_2_array_classifier2, label=f"{classifier2}, 2 class")
+plt.plot(dims_array, f1_6_array_classifier2, label=f"{classifier2}, 6 class")
 plt.xlabel("Dimensions")
 plt.ylabel("F1 score (precision*recall/(precision+recall)")
 plt.title(f"F1 score vs dimension using PCA feature projection.\n{iters} iterations per dimension")
 plt.legend()
 
 plt.figure()
-plt.plot(dims_array, std_2_array_classifier1, label="SVM, 2 class")
-plt.plot(dims_array, std_6_array_classifier1, label="SVM, 6 class")
-plt.plot(dims_array, std_2_array_classifier2, label="LDA, 2 class")
-plt.plot(dims_array, std_6_array_classifier2, label="LDA, 6 class")
+plt.plot(dims_array, std_2_array_classifier1, label=f"{classifier1}, 2 class")
+plt.plot(dims_array, std_6_array_classifier1, label=f"{classifier1}, 6 class")
+plt.plot(dims_array, std_2_array_classifier2, label=f"{classifier2}, 2 class")
+plt.plot(dims_array, std_6_array_classifier2, label=f"{classifier2}, 6 class")
 plt.xlabel("Dimensions")
 plt.ylabel("STD accuracy")
 plt.title(f"STD vs dimension using PCA feature projection.\n{iters} iterations per dimension")

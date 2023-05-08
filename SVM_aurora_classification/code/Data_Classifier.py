@@ -13,7 +13,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score, recall_score, f1_score
 from sklearn import svm
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import RidgeClassifier
 
 import torch
 from torchvision import transforms
@@ -64,7 +64,7 @@ class Feature_Extractor:
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])])
             num_feats = 1000
-            model_feat_extractor = create_feature_extractor(model, return_nodes=['fc'])
+            model_feat_extractor = create_feature_extractor(model, return_nodes=['flatten'])
         
         else:
             raise ValueError(f"The given model ({model_name}) is not a valid option")
@@ -73,8 +73,8 @@ class Feature_Extractor:
         feats = np.zeros([num_pics,num_feats], dtype=np.float32)
 
         print(f"\nStarting feature extraction for model: {model_name}")
-        Parallel(n_jobs=3, backend='sequential', require='sharedmem')(delayed(loop)(i) for i in tqdm(range(len(self.filenames))))
-        """
+        #Parallel(n_jobs=3, backend='sequential', require='sharedmem')(delayed(loop)(i) for i in tqdm(range(len(self.filenames))))
+        
         for i, img in enumerate(tqdm(self.filenames)):
             full_path = self.directory + img
             with Image.open(full_path) as im:
@@ -82,19 +82,19 @@ class Feature_Extractor:
                 image_batch = image_tensor.unsqueeze(0)
 
                 pic_feats = model_feat_extractor(image_batch)
-                array_feats = pic_feats['fc'].detach().numpy()
+                array_feats = pic_feats['flatten'].detach().numpy()
                 feats[i] = array_feats
-        """
+        
 
         hf = h5py.File(self.path_feats, 'w')
-        hf.create_dataset('features', data=feats)
+        hf.create_dataset('features', data=feats, dtype=np.float32)
         hf.close()
 
 class Data_Classifier:
     def __init__(self,
                  input,
                  output,
-                 test_size = 0.2,
+                 test_size = 0.3,
                  average='micro'):
         self.test_size = test_size
         self.average = average
@@ -166,6 +166,8 @@ class Data_Classifier:
             self.clf = svm.SVC(kernel='poly', degree=deg)
         elif classifier == 'LDA':
             self.clf = LDA()
+        elif classifier == 'Ridge':
+            self.clf = RidgeClassifier(alpha=0.03)
         else:
             raise ValueError(f"The given classifier ({classifier}) does not exist")
         
