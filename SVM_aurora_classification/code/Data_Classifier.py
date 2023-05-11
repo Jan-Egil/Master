@@ -17,7 +17,8 @@ from sklearn.linear_model import RidgeClassifier
 
 import torch
 from torchvision import transforms
-from torchvision.models import shufflenet_v2_x1_0, inception_v3
+from torchvision.models import shufflenet_v2_x1_0, ShuffleNet_V2_X1_0_Weights
+from torchvision.models import inception_v3, Inception_V3_Weights
 from torchvision.models.feature_extraction import get_graph_node_names
 from torchvision.models.feature_extraction import create_feature_extractor
 
@@ -46,17 +47,23 @@ class Feature_Extractor:
         
         if model_name == 'shufflenet_v2_x1_0':
             model = shufflenet_v2_x1_0(weights='DEFAULT')
+            preproc = ShuffleNet_V2_X1_0_Weights.IMAGENET1K_V1.transforms()
+            """
             preproc = transforms.Compose([
                 transforms.Resize(256),
                 transforms.CenterCrop(224),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], 
                                      std=[0.229, 0.224, 0.225])])
+            """
             num_feats = 1000
-            model_feat_extractor = create_feature_extractor(model, return_nodes=['fc'])
+            return_nodes = 'fc'
+            model_feat_extractor = create_feature_extractor(model, return_nodes=[return_nodes])
         
         elif model_name == 'inception_v3':
             model = inception_v3(weights='DEFAULT')
+            #preproc = Inception_V3_Weights.IMAGENET1K_V1.transforms()
+
             preproc = transforms.Compose([
                 transforms.Resize(299),
                 transforms.CenterCrop(299),
@@ -64,7 +71,8 @@ class Feature_Extractor:
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])])
             num_feats = 1000
-            model_feat_extractor = create_feature_extractor(model, return_nodes=['flatten'])
+            return_nodes = 'fc'
+            model_feat_extractor = create_feature_extractor(model, return_nodes=[return_nodes])
         
         else:
             raise ValueError(f"The given model ({model_name}) is not a valid option")
@@ -72,9 +80,7 @@ class Feature_Extractor:
         num_pics = len(self.filenames)
         feats = np.zeros([num_pics,num_feats], dtype=np.float32)
 
-        print(f"\nStarting feature extraction for model: {model_name}")
-        #Parallel(n_jobs=3, backend='sequential', require='sharedmem')(delayed(loop)(i) for i in tqdm(range(len(self.filenames))))
-        
+        print(f"\nStarting feature extraction for model: {model_name}")        
         for i, img in enumerate(tqdm(self.filenames)):
             full_path = self.directory + img
             with Image.open(full_path) as im:
@@ -82,7 +88,7 @@ class Feature_Extractor:
                 image_batch = image_tensor.unsqueeze(0)
 
                 pic_feats = model_feat_extractor(image_batch)
-                array_feats = pic_feats['flatten'].detach().numpy()
+                array_feats = pic_feats[return_nodes].detach().numpy()
                 feats[i] = array_feats
         
 
