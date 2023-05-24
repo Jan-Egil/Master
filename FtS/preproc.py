@@ -34,7 +34,13 @@ for path_file_name in path_feats_list:
         num_pics_tot = num_pics_tot + num_pics
         num_pics_in_each.append(num_pics)
 
+
+# Then create (and fill) arrays to insert into dataframe
 features = np.zeros([num_pics_tot, 1000], dtype=np.float32)
+
+DD_array = np.zeros(num_pics_tot)
+SS_array = np.zeros(num_pics_tot)
+
 
 for i, path_file_name in enumerate(path_feats_list):
     path_feat = path_feats_dir + path_file_name
@@ -52,6 +58,13 @@ print(features.shape)
 
 np.save('/scratch/newfeats/features', features)
 
+# Then insert content into dataframe
+
+for i in range(num_feats):
+    df[f'feat_{i}'] = features[:, i]
+df['DD'] = DD_array
+df['SS'] = SS_array
+print(df)
 
 """
 # Then insert content into dataframe
