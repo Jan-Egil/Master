@@ -25,10 +25,10 @@ for picnum in range(1,5825):
     filename_list.append(filename)
 
 feature_extraction = Feature_Extractor(pic_dir, filename_list, feat_path)
-feature_extraction.extract_features(model_name='inception_v3')
+feature_extraction.extract_features(model_name='shufflenet_v2_x1_0')
 
 
-classifier1 = 'SVM'
+classifier1 = 'Ridge'
 classifier2 = 'Ridge'
 
 with h5py.File(feat_path, 'r') as f:
@@ -39,7 +39,7 @@ df = pd.read_csv(classification_path, header=16)
 aurora_binary = np.array(df['class2'])
 aurora_class = np.array(df['class6'])
 
-dims_array = np.arange(2,30)
+dims_array = np.array([999, 1000])#np.arange(2,30)
 
 prcnt2_array_classifier1 = np.zeros(dims_array.shape[0])
 prcnt6_array_classifier1 = np.zeros(dims_array.shape[0])
@@ -127,6 +127,7 @@ for i, dims in enumerate(tqdm(dims_array)):
     recall6_array_classifier1[i] = rec6sum/iters
     f1_2_array_classifier1[i] = f12sum/iters
     f1_6_array_classifier1[i] = f16sum/iters
+    DC6.plot_matrix_2()
 
 """
 Classifier 2

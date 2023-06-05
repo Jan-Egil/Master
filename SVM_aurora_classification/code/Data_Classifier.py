@@ -32,30 +32,17 @@ class Feature_Extractor:
         self.path_feats = path_feats
     
     def extract_features(self, model_name='shufflenet_v2_x1_0'):
-        def loop(i):
-            img = self.filenames[i]
-            full_path = self.directory + img
-            with Image.open(full_path) as im:
-                image_tensor = preproc(im)
-                image_batch = image_tensor.unsqueeze(0)
-
-                pic_feats = model_feat_extractor(image_batch)
-                array_feats = pic_feats['fc'].detach().numpy()
-                feats[i] = array_feats
-                #return array_feats
-
-        
         if model_name == 'shufflenet_v2_x1_0':
             model = shufflenet_v2_x1_0(weights='DEFAULT')
-            preproc = ShuffleNet_V2_X1_0_Weights.IMAGENET1K_V1.transforms()
-            """
+            #preproc = ShuffleNet_V2_X1_0_Weights.IMAGENET1K_V1.transforms()
+
             preproc = transforms.Compose([
                 transforms.Resize(256),
                 transforms.CenterCrop(224),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], 
                                      std=[0.229, 0.224, 0.225])])
-            """
+
             num_feats = 1000
             return_nodes = 'fc'
             model_feat_extractor = create_feature_extractor(model, return_nodes=[return_nodes])
@@ -86,7 +73,6 @@ class Feature_Extractor:
             with Image.open(full_path) as im:
                 image_tensor = preproc(im)
                 image_batch = image_tensor.unsqueeze(0)
-
                 pic_feats = model_feat_extractor(image_batch)
                 array_feats = pic_feats[return_nodes].detach().numpy()
                 feats[i] = array_feats
