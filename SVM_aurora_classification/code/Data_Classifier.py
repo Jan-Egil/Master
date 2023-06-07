@@ -137,7 +137,8 @@ class Data_Classifier:
                  classifier = 'SVM',
                  deg = 3,
                  C = 1,
-                 gamma='scale'):
+                 gamma='scale',
+                 alpha=0.03):
         """
         Classify the test-data using a classifier
         
@@ -159,7 +160,7 @@ class Data_Classifier:
         elif classifier == 'LDA':
             self.clf = LDA()
         elif classifier == 'Ridge':
-            self.clf = RidgeClassifier(alpha=0.03)
+            self.clf = RidgeClassifier(alpha=alpha)
         else:
             raise ValueError(f"The given classifier ({classifier}) does not exist")
         
