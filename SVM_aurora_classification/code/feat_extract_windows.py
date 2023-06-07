@@ -22,7 +22,7 @@ else:
     base_dir = os.getcwd()
     data_dir = base_dir + "/data/SVM_aurora_classification"
     classification_path = data_dir + "/classifications.csv"
-    pic_dir = '/scratch/oath_v1.1/images/cropped_scaled_rotated/'
+    pic_dir = '/scratch/oath_v1.1/images/cropped_scaled/'
     feat_path = data_dir + '/shufflenet/auroral_feat.h5'
 
 
@@ -38,7 +38,7 @@ feature_extraction.extract_features(model_name='shufflenet_v2_x1_0')
 
 # Data Classification part
 
-classifier = 'Ridge'
+classifier = 'SVM'
 iters = 10
 
 with h5py.File(feat_path, 'r') as f:
