@@ -8,20 +8,24 @@ from sys import platform
 
 from Data_Classifier import Data_Classifier, Feature_Extractor
 
-os.chdir('../..')
-base_dir = os.getcwd()
-data_dir = base_dir + '\data\SVM_aurora_classification'
-classification_path = data_dir + '\classifications.csv'
-os.chdir('../../..')
-base_dir_2 = os.getcwd()
 if platform == 'win32':
+    os.chdir('../..')
+    base_dir = os.getcwd()
+    data_dir = base_dir + '\data\SVM_aurora_classification'
+    classification_path = data_dir + '\classifications.csv'
+    os.chdir('../../..')
+    base_dir_2 = os.getcwd()
     pic_dir = "C:\\Users\janeg\Desktop\oath_v1.1\images\cropped_scaled\\"
+    feat_path = data_dir + '\shufflenet\\auroral_feat.h5'
 else:
+    os.chdir('../..')
+    base_dir = os.getcwd()
+    data_dir = base_dir + "/data/SVM_aurora_classification"
+    classification_path = data_dir + "/classifications.csv"
     pic_dir = '/scratch/oath_v1.1/images/cropped_scaled_rotated/'
-feat_path = data_dir + '\shufflenet\\auroral_feat.h5'
-print(pic_dir)
+    feat_path = data_dir + '/shufflenet/auroral_feat.h5'
 
-"""
+
 filename_list = []
 
 for picnum in range(1,5825):
@@ -30,11 +34,11 @@ for picnum in range(1,5825):
 
 feature_extraction = Feature_Extractor(pic_dir, filename_list, feat_path)
 feature_extraction.extract_features(model_name='shufflenet_v2_x1_0')
-"""
+
 
 # Data Classification part
 
-classifier = 'SVM'
+classifier = 'Ridge'
 iters = 10
 
 with h5py.File(feat_path, 'r') as f:
@@ -68,13 +72,14 @@ for i, test_size in enumerate(tqdm(test_size_array)):
 
 
 plt.figure()
-plt.title("SVM test size versus accuracy")
+plt.title("Ridge test size versus accuracy")
 plt.plot(test_size_array, prcnt2_array, label="2 class Ridge")
 plt.plot(test_size_array, prcnt6_array, label="6 class Ridge")
 plt.xlabel("Test size")
 plt.ylabel("Percent Accuracy")
 plt.legend()
 plt.grid()
+print(f"Test size of 0.1 gives {prcnt2_array[0]}% 2class and {prcnt6_array[0]}% 6class accuracy")
 
 # Looking at differences in (insert thing here..)
 
