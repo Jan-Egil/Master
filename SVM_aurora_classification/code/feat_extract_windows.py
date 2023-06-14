@@ -38,7 +38,7 @@ feature_extraction.extract_features(model_name='shufflenet_v2_x1_0')
 
 # Data Classification part
 
-classifier = 'SVM'
+classifier = 'Ridge'
 iters = 10
 
 with h5py.File(feat_path, 'r') as f:
