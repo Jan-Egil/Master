@@ -57,7 +57,7 @@ prcnt6_array = np.zeros_like(test_size_array)
 for i, test_size in enumerate(tqdm(test_size_array)):
     prcnt2 = 0
     prcnt6 = 0
-    for j in range(iters):
+    for j in tqdm(range(iters)):
         DC2 = Data_Classifier(features, aurora_binary, test_size=test_size)
         DC2.scale()
         DC2.classify(classifier=classifier)
