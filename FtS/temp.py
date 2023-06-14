@@ -24,26 +24,52 @@ else:
 
 from spacepy import pycdf
 
-cdf_path = full_path + "temp.cdf"
+cdf_path = full_path + "temp2.cdf"
 cdf = pycdf.CDF(cdf_path)
 
-loc = "gill"
+#loc = "gill"
+loc = 'fsim'
 
 key_img = f"thg_asf_{loc}"
 
 num_imgs = cdf[key_img].shape[0]
 print(num_imgs)
 
-print(cdf[f"{key_img}_tend"][...])
+#print(cdf[f"{key_img}"][...])
 
-img_array_red = np.zeros([256, 256], dtype=np.uint16)
-img_array_blue = np.zeros([256, 256], dtype=np.uint16)
-img_array_green = cdf[key_img][100]
+img_array = cdf[key_img][700]
 
-img_array = np.array([img_array_red, img_array_green, img_array_blue])
+# Crop the image
+
+crop_percent = 12
+num_pixels = int(img_array.shape[0]*(crop_percent/100))
+temp_img = Image.fromarray(img_array)
+(left, upper, right, lower) = (num_pixels, num_pixels, img_array.shape[0]-num_pixels, img_array.shape[0]-num_pixels)
+temp_img2 = temp_img.crop((left, upper, right, lower))
+img_array = np.asarray(temp_img2)
+
+
+
+# Rescale to range [0,1]
+# 1st percentile, subtract this
+percentile1 = np.percentile(img_array, 1)
+img_array = img_array - percentile1
+
+# Then 99th percentile (of altered array), divide by this.
+percentile99 = np.percentile(img_array, 99)
+img_array = img_array/percentile99
+
+# Then set everything under 0 to 0, and everything over 1 to 1.
+img_array[img_array > 1] = 1
+img_array[img_array < 0] = 0
+
+"""
+rgb_filter = np.zeros_like(img_array)
+img_array = np.array([rgb_filter, img_array*255, rgb_filter])
 print(img_array)
-#img_array = cdf[key_img][100]
-img = Image.fromarray(img_array, 'RGB')
+"""
+
+img = Image.fromarray(img_array*255)
 img.show()
 
 cdf.close()
