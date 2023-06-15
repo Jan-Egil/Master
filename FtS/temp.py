@@ -37,7 +37,7 @@ print(num_imgs)
 
 #print(cdf[f"{key_img}"][...])
 
-img_array = cdf[key_img][700]
+img_array = cdf[key_img][660]
 
 # Crop the image
 
@@ -70,6 +70,7 @@ print(img_array)
 """
 
 img = Image.fromarray(img_array*255)
+img = img.resize((256,256))
 img.show()
 
 cdf.close()
