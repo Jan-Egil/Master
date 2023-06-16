@@ -29,6 +29,7 @@ cdf = pycdf.CDF(cdf_path)
 
 #loc = "gill"
 loc = 'fsim'
+#loc = 'inuv'
 
 key_img = f"thg_asf_{loc}"
 
@@ -37,7 +38,7 @@ print(num_imgs)
 
 #print(cdf[f"{key_img}"][...])
 
-img_array = cdf[key_img][660]
+img_array = cdf[key_img][700]
 
 # Crop the image
 
@@ -63,18 +64,34 @@ img_array = img_array/percentile99
 img_array[img_array > 1] = 1
 img_array[img_array < 0] = 0
 
-"""
-rgb_filter = np.zeros_like(img_array)
-img_array = np.array([rgb_filter, img_array*255, rgb_filter])
-print(img_array)
-"""
+
+"""shape = img_array.shape[0]
+img_array_final = np.zeros([shape, shape, 3])
+img_array_final[1] = img_array"""
 
 img = Image.fromarray(img_array*255)
-img = img.resize((256,256))
+img = img.resize((224,224))
+img = img.convert("RGB")
 img.show()
 
 cdf.close()
 
+model = shufflenet_v2_x1_0(weights='DEFAULT')
+preproc = ShuffleNet_V2_X1_0_Weights.IMAGENET1K_V1.transforms()
+num_feats = 1000
+return_nodes = 'fc'
+model_feat_extractor = create_feature_extractor(model, return_nodes=[return_nodes])
+
+num_pics = 1
+feats = np.zeros([num_pics,num_feats], dtype=np.float32)
+image_tensor = preproc(img)
+image_batch = image_tensor.unsqueeze(0)
+pic_feats = model_feat_extractor(image_batch)
+array_feats = pic_feats[return_nodes].detach().numpy()
+feats[0] = array_feats
+
+print(feats.max())
+print(feats.min())
 
 """
 path_feats_dir = '/scratch/asim/'
