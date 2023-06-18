@@ -4,6 +4,7 @@ import numpy as np
 from sys import platform
 from PIL import Image
 import os
+from datetime import datetime
 
 import torch
 from torchvision import transforms
@@ -33,12 +34,14 @@ loc = 'fsim'
 
 key_img = f"thg_asf_{loc}"
 
-num_imgs = cdf[key_img].shape[0]
-print(num_imgs)
+num_imgs = cdf
+print(num_imgs['range_epoch'][0], num_imgs['range_epoch'][1])
 
 #print(cdf[f"{key_img}"][...])
 
 img_array = cdf[key_img][700]
+timestamp = cdf[f"{key_img}_epoch"][701]
+print(type(timestamp))
 
 # Crop the image
 

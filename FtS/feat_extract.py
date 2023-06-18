@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 import requests
 import re
+from datetime import datetime
 
 import torch
 from torchvision import transforms
@@ -65,7 +66,7 @@ file = open('urls\\urls_fsim.txt', 'r')
 urls = file.readline().split()
 file.close()
 
-urls2 = [urls[0], urls[1]]
+#urls2 = [urls[0], urls[0]]
 
 if not os.path.exists(full_path):
     os.mkdir(full_path)
@@ -81,18 +82,19 @@ num_feats = 1000
 return_nodes = 'fc'
 model_feat_extractor = create_feature_extractor(model, return_nodes=[return_nodes])
 
-for url in tqdm(urls2):
+df = pd.DataFrame(columns=['features', 'timestamp', 'loc'])
+
+for url in tqdm(urls):
     # Download cdf-file
     r = requests.get(url)
     a = open(cdfpath, 'wb')
     a.write(r.content)
     a.close()
     
-    # Process cdf-file (get features)
+    # Process cdf-file (get features and timestamp)
     cdf = pycdf.CDF("temp.cdf")
-    print(cdf)
     num_imgs = cdf[key_img].shape[0]
-    feats = np.zeros([num_imgs,num_feats], dtype=np.float32)
+    #feats = np.zeros([num_imgs,num_feats], dtype=np.float32)
     for i in tqdm(range(int(num_imgs))):
         img_array = cdf[key_img][i]
 
@@ -128,29 +130,23 @@ for url in tqdm(urls2):
         image_batch = image_tensor.unsqueeze(0)
         pic_feats = model_feat_extractor(image_batch)
         array_feats = pic_feats[return_nodes].detach().numpy()
-        feats[i] = array_feats
+        #feats[i] = array_feats
+
+        # Insert features, timestamp and location into dataframe
+        dict = [{"features": array_feats[0],
+                 "timestamp": cdf[f"{key_img}_epoch"][i],
+                 "loc": loc}]
+        df = pd.concat([df, pd.DataFrame(dict)], ignore_index = True)
+        df.reset_index()
 
     # Delete cdf-file
     cdf.close()
     os.remove("temp.cdf")
 
-#url = urls[0]
-
-os.chdir(full_path)
-
-"""
-Do stuff
-"""
-
-# Download cdf-file
-"""
-r = requests.get(url)
-a = open("temp.cdf", 'wb')
-a.write(r.content)
-a.close()
-"""
-
 os.chdir('..')
-#os.rmdir(full_path)
+if not os.listdir(full_path):
+    os.rmdir(full_path)
+
+df.to_hdf('features.h5', key=f'features_{loc}', mode='w')
 
 # Save pandas as feather
