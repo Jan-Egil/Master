@@ -9,6 +9,7 @@ from tqdm import tqdm
 import requests
 import re
 from datetime import datetime
+import sys
 
 import torch
 from torchvision import transforms
@@ -17,15 +18,24 @@ from torchvision.models import inception_v3, Inception_V3_Weights
 from torchvision.models.feature_extraction import get_graph_node_names
 from torchvision.models.feature_extraction import create_feature_extractor
 
+# IMPORTANT! Remove when done!
+import warnings
+warnings.filterwarnings('ignore')
+
 if platform == 'win32':
     os.environ['CDF_LIB'] = "C:\\Users\janeg\Desktop\CDF\\bin"
     curr_path = os.getcwd()
     temp_dir = "\\tempdir"
     full_path = curr_path+temp_dir
     cdfpath = full_path + "\\temp.cdf"
+    save_path = ...
 else:
-    os.environ["CDF_LIB"] = "/usr/bin/"#"/uio/hume/student-u58/janeod/.conda/envs/SVM/lib/python3.10/site-packages/spacepy"
-    cdfpath = ...
+    os.environ["CDF_LIB"] = "/uio/hume/student-u58/janeod/Downloads/cdf39_0-dist-all/cdf39_0-dist/lib"
+    curr_path = os.getcwd()
+    temp_dir = "/tempdir"
+    full_path = curr_path+temp_dir
+    cdfpath = full_path + "/temp.cdf"
+    save_path = "/scratch/feats_FtS/"
 
 from spacepy import pycdf
 
@@ -40,6 +50,8 @@ def retrive_urls():
     months = ["10", "11", "12", "01", "02"]
     
     os.chdir('urls')
+
+    print("Extracting URLs for downloading content")
     for loc in tqdm(locs):
         urls = []
         for month in tqdm(months):
@@ -58,11 +70,15 @@ def retrive_urls():
         file = open(f'urls_{loc}.txt', 'w')
         file.writelines(urls)
         file.close()
+    print("Finshed extracting URLs\n\n")
     os.chdir('..')
 
-#retrive_urls()
+retrive_urls()
 
-file = open('urls\\urls_fsim.txt', 'r')
+if platform == 'win32':
+    file = open('urls\\urls_fsim.txt', 'r')
+else:
+    file = open('urls/urls_fsim.txt', 'r')
 urls = file.readline().split()
 file.close()
 
@@ -82,14 +98,14 @@ num_feats = 1000
 return_nodes = 'fc'
 model_feat_extractor = create_feature_extractor(model, return_nodes=[return_nodes])
 
-df = pd.DataFrame(columns=['features', 'timestamp', 'loc'])
-
-for url in tqdm(urls):
+for iter_num, url in enumerate(tqdm(urls)):
     # Download cdf-file
     r = requests.get(url)
     a = open(cdfpath, 'wb')
     a.write(r.content)
     a.close()
+
+    df = pd.DataFrame(columns=['features', 'timestamp', 'loc'])
     
     # Process cdf-file (get features and timestamp)
     cdf = pycdf.CDF("temp.cdf")
@@ -136,6 +152,7 @@ for url in tqdm(urls):
         dict = [{"features": array_feats[0],
                  "timestamp": cdf[f"{key_img}_epoch"][i],
                  "loc": loc}]
+        #df = pd.DataFrame(dict)
         df = pd.concat([df, pd.DataFrame(dict)], ignore_index = True)
         df.reset_index()
 
@@ -143,10 +160,12 @@ for url in tqdm(urls):
     cdf.close()
     os.remove("temp.cdf")
 
+    # Save cdf to pandas
+    cdf_file = save_path+f"iter_{iter_num}_loc_{loc}.h5"
+    df.to_hdf(cdf_file, key=f'features', mode='w')
+    del df
+
+
 os.chdir('..')
 if not os.listdir(full_path):
     os.rmdir(full_path)
-
-df.to_hdf('features.h5', key=f'features_{loc}', mode='w')
-
-# Save pandas as feather
