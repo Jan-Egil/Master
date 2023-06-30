@@ -33,14 +33,25 @@ for iter in tqdm(range(1,1686)):
     df.reset_index()
 del df2
 
-print(df['features'])
-
-
+# Define and extract features-column into its own array
+array_feats = ...
 
 # 2nd: Apply scaling and PCA to reduce said dimensions. (35 dims is a nice start)
+# HEADS UP! One should maybe train-test-split first before scaling and reducing to be statistically correct.
+# This is sort of cheating. Should look closer into this.
+
+print("Scaling the data..")
+sc = StandardScaler()
+array_feats = sc.fit_transform(array_feats)
+print("Scaling done!\n")
+
+print("Reducing dimensionality of data..")
+reducer = PCA(n_components=35)
+array_feats = reducer.fit_transform(array_feats)
+print("Reduction done!\n")
 
 
-# 3rd: Make sure to connect the right features with the right locatons and timestamps in a new dataframe
+# 3rd: Connect the right features with the right locatons and timestamps in a new dataframe
 
 
 # 4th: Save dataframe to file. Delete variable
