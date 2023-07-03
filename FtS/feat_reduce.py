@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from sys import platform
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -11,7 +11,7 @@ from sklearn.decomposition import PCA
 if platform == 'win32':
     array_feats_first = np.random.random((100,1000))
     loc = ['fsim' for i in range(100)]
-    timestamps = [datetime.now() for i in range(100)]
+    timestamps = [datetime.now()+timedelta(seconds=20*i) for i in range(100)]
 
     dict = {"features": [array_feats_first[0]],
             "timestamp": timestamps[0],
@@ -39,6 +39,7 @@ else:
     cdfpath = full_path + "/temp.cdf"
     save_path = "/scratch/feats_FtS/"
     save_path_reduced = save_path + "reduced_feats.h5"
+    save_path_binned = save_path + "reduced_binned_feats.h5"
 
     # 1st: Gather all features in one large array-like structure
     # Tip: first make one big pandas dataframe, then turn that into array
@@ -99,8 +100,6 @@ for i in tqdm(range(1, num_points)):
 del new_df2
 print("Placement done!")
 
-print(new_df)
-
 # 4th: Save dataframe to file. Delete variable
 # Tip: Try to plot features against timestamps. See if you find some structure in the madness
 
@@ -111,12 +110,110 @@ else:
     new_df.to_hdf(save_path_reduced, key=f'reduced_feats', mode='w')
 
 del new_df
+del df
 
-# 5th: Extract dataframe from file
+# 5th: Extract dataframe from file. Also sort it in date-order
 
+if platform == "win32":
+    df = pd.read_hdf('reduced_feats.h5', key=f'reduced_feats')
+else:
+    df = pd.read_hdf(save_path_reduced, key=f'reduced_feats')
 
-# 6th: Combine the features into bins of 1 minutes each. (Average of each feature on their own?)
+df.sort_values(by='timestamp', inplace=True, ignore_index=True)
+df.reset_index()
 
+# 6th: Combine the features into bins of 1 minutes each. (Average of each feature on their own)
+
+print(df['timestamp'][0].minute)
+print(df['timestamp'][0])
+
+new_df = pd.DataFrame(columns=['averaged_feats', 'timestamp', 'loc'])
+print(new_df)
+
+num_points = len(df.index)
+num_in_minute = 0
+set_minute = df['timestamp'][0].minute
+set_hour = df['timestamp'][0].hour
+num_reduced_feats = len(df['feat_reduced'][0])
+
+for i in tqdm(range(num_points)):
+    timestamp = df['timestamp'][i]
+    year = timestamp.year
+    month = timestamp.month
+    day = timestamp.day
+    hour = timestamp.hour
+    minute = timestamp.minute
+
+    # If it's the last element, cut it off entirely. Fill in with previous 
+    if i == num_points-1:
+        relevant_df = df[['feat_reduced', 'timestamp', 'loc']][i-num_in_minute:i]
+        relevant_df.reset_index(inplace=True)
+        num_points_in_relevant = len(relevant_df.index)
+        print(relevant_df['timestamp'])
+        average_list = []
+        for feature_elem in range(num_reduced_feats):
+            average_val = 0
+            for elem_in_df in range(num_points_in_relevant):
+                feature_value = relevant_df['feat_reduced'][elem_in_df][feature_elem]
+                average_val += feature_value
+            average_val = average_val/num_points_in_relevant
+            average_list.append(average_val)
+
+        relevant_timestamp = relevant_df['timestamp'][0]
+        new_timestamp = datetime(year=relevant_timestamp.year,
+                                 month=relevant_timestamp.month,
+                                 day=relevant_timestamp.day,
+                                 hour=relevant_timestamp.hour,
+                                 minute=relevant_timestamp.minute,
+                                 second=0)
+        dict = {'averaged_feats': [np.array(average_list)],
+                'timestamp': new_timestamp,
+                'loc': relevant_df['loc'][0]}
+        new_df2 = pd.DataFrame(dict)
+        new_df = pd.concat([new_df, new_df2], ignore_index=True)
+        new_df.reset_index()
+        num_in_minute = 1
+        set_minute = minute
+        set_hour = hour
+
+    # If it's the same datetime as the one above, continue the loop
+    elif minute == set_minute and hour == set_hour:
+        num_in_minute += 1
+
+    # If it's a new datetime, fill in all the previous elements and bin them together
+    else:
+        relevant_df = df[['feat_reduced', 'timestamp', 'loc']][i-num_in_minute:i]
+        relevant_df.reset_index(inplace=True)
+        num_points_in_relevant = len(relevant_df.index)
+        print(relevant_df['timestamp'])
+        average_list = []
+        for feature_elem in range(num_reduced_feats):
+            average_val = 0
+            for elem_in_df in range(num_points_in_relevant):
+                feature_value = relevant_df['feat_reduced'][elem_in_df][feature_elem]
+                average_val += feature_value
+            average_val = average_val/num_points_in_relevant
+            average_list.append(average_val)
+
+        relevant_timestamp = relevant_df['timestamp'][0]
+        new_timestamp = datetime(year=relevant_timestamp.year,
+                                 month=relevant_timestamp.month,
+                                 day=relevant_timestamp.day,
+                                 hour=relevant_timestamp.hour,
+                                 minute=relevant_timestamp.minute,
+                                 second=0)
+        dict = {'averaged_feats': [np.array(average_list)],
+                'timestamp': new_timestamp,
+                'loc': relevant_df['loc'][0]}
+        new_df2 = pd.DataFrame(dict)
+        new_df = pd.concat([new_df, new_df2], ignore_index=True)
+        new_df.reset_index()
+        num_in_minute = 1
+        set_minute = minute
+        set_hour = hour
+
+print(new_df)
+print(df)
 
 # 7th: Use location and timestamp-data together with onset-data to determine whether or not there has been an onset.
 
