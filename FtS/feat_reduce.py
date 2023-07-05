@@ -236,8 +236,10 @@ print(datetimerange_mins)
 
 
 for minutecounter in tqdm(range(int(datetimerange_mins))):
-    ...
-
+    deltatime = timedelta(minutes=minutecounter)
+    temp_datetime = datetime_start + deltatime
+    print(temp_datetime)
+"""
 # 7th: Use location and timestamp-data together with onset-data to determine whether or not there has been an onset.
 
 if platform == "win32":
@@ -278,3 +280,4 @@ print(substorm_df)
 
 
 # 10th: 
+"""
