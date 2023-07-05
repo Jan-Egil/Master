@@ -35,7 +35,7 @@ else:
     temp_dir = "/tempdir"
     full_path = curr_path+temp_dir
     cdfpath = full_path + "/temp.cdf"
-    save_path = "/scratch/feats_FtS/"
+    save_path = "/scratch/feats_FtS/extracted_feats"
 
 from spacepy import pycdf
 

@@ -37,9 +37,9 @@ else:
     temp_dir = "/tempdir"
     full_path = curr_path+temp_dir
     cdfpath = full_path + "/temp.cdf"
-    save_path = "/scratch/feats_FtS/"
-    save_path_reduced = save_path + "reduced_feats.h5"
-    save_path_binned = save_path + "reduced_binned_feats.h5"
+    save_path = "/scratch/feats_FtS/extracted_feats"
+    save_path_reduced = "/scratch/feats_FtS/reduced_feats"
+    save_path_binned = "/scratch/feats_FtS/binned_feats"
     substorm_csv_path = ...
 
     # 1st: Gather all features in one large array-like structure
