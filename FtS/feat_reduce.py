@@ -2,11 +2,15 @@ import os
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from sys import platform
+from sys import platform, argv
 from datetime import datetime, timedelta
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+
+if len(argv) > 1:
+    if argv[1] == 'test':
+        platform = 'win32'
 
 if platform == 'win32':
     array_feats_first = np.random.random((100,1000))
@@ -86,11 +90,14 @@ print("Reduction done!\n")
 # 3rd: Connect the right features with the right locatons and timestamps in a new dataframe
 
 print("Placing reduced features, timestamps and location in new dataframe..")
-dict = {"feat_reduced": [array_feats[0]],
-        "timestamp": timestamps[0],
-        "loc": loc[0]}
+dict = {"feat_reduced": array_feats,
+        "timestamp": timestamps,
+        "loc": loc}
+print(array_feats.shape)
+print(len(timestamps))
+print(len(loc))
 new_df = pd.DataFrame(dict, dtype=object)
-
+"""
 for i in tqdm(range(1, num_points)):
     dict = {"feat_reduced": [array_feats[i]],
             "timestamp": timestamps[i],
@@ -99,6 +106,7 @@ for i in tqdm(range(1, num_points)):
     new_df = pd.concat([new_df, new_df2], ignore_index=True)
 new_df.reset_index()
 del new_df2
+"""
 print("Placement done!")
 
 # 4th: Save dataframe to file. Delete variable
