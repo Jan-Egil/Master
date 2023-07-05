@@ -37,9 +37,9 @@ else:
     temp_dir = "/tempdir"
     full_path = curr_path+temp_dir
     cdfpath = full_path + "/temp.cdf"
-    save_path = "/scratch/feats_FtS/extracted_feats"
-    save_path_reduced = "/scratch/feats_FtS/reduced_feats"
-    save_path_binned = "/scratch/feats_FtS/binned_feats"
+    save_path = "/scratch/feats_FtS/extracted_feats/"
+    save_path_reduced = "/scratch/feats_FtS/reduced_feats/reduced_feats.h5"
+    save_path_binned = "/scratch/feats_FtS/binned_feats/binned_feats.h5"
     substorm_csv_path = ...
 
     # 1st: Gather all features in one large array-like structure
@@ -97,7 +97,7 @@ for i in tqdm(range(1, num_points)):
             "loc": loc[i]}
     new_df2 = pd.DataFrame(dict)
     new_df = pd.concat([new_df, new_df2], ignore_index=True)
-    new_df.reset_index()
+new_df.reset_index()
 del new_df2
 print("Placement done!")
 
