@@ -40,6 +40,7 @@ else:
     save_path = "/scratch/feats_FtS/"
     save_path_reduced = save_path + "reduced_feats.h5"
     save_path_binned = save_path + "reduced_binned_feats.h5"
+    substorm_csv_path = ...
 
     # 1st: Gather all features in one large array-like structure
     # Tip: first make one big pandas dataframe, then turn that into array
@@ -149,7 +150,6 @@ for i in tqdm(range(num_points)):
         relevant_df = df[['feat_reduced', 'timestamp', 'loc']][i-num_in_minute:i]
         relevant_df.reset_index(inplace=True)
         num_points_in_relevant = len(relevant_df.index)
-        print(relevant_df['timestamp'])
         average_list = []
         for feature_elem in range(num_reduced_feats):
             average_val = 0
@@ -185,7 +185,6 @@ for i in tqdm(range(num_points)):
         relevant_df = df[['feat_reduced', 'timestamp', 'loc']][i-num_in_minute:i]
         relevant_df.reset_index(inplace=True)
         num_points_in_relevant = len(relevant_df.index)
-        print(relevant_df['timestamp'])
         average_list = []
         for feature_elem in range(num_reduced_feats):
             average_val = 0
@@ -202,9 +201,11 @@ for i in tqdm(range(num_points)):
                                  hour=relevant_timestamp.hour,
                                  minute=relevant_timestamp.minute,
                                  second=0)
+        
         dict = {'averaged_feats': [np.array(average_list)],
                 'timestamp': new_timestamp,
                 'loc': relevant_df['loc'][0]}
+        
         new_df2 = pd.DataFrame(dict)
         new_df = pd.concat([new_df, new_df2], ignore_index=True)
         new_df.reset_index()
@@ -212,11 +213,63 @@ for i in tqdm(range(num_points)):
         set_minute = minute
         set_hour = hour
 
-print(new_df)
-print(df)
+# 6.5th: Fill in the blank minutes that don't exist in the dataframe maybe?
+
+datetime_start = datetime(year=2012,
+                          month=10,
+                          day=1,
+                          hour=0,
+                          minute=0,
+                          second=0)
+datetime_stop = datetime(year=2013,
+                         month=3,
+                         day=1,
+                         hour=0,
+                         minute=0,
+                         second=0)
+
+no_data_feats = [0 for i in range(len(new_df['averaged_feats'][0]))]
+
+datetimerange_mins = (datetime_stop-datetime_start).total_seconds()/60
+print(datetimerange_mins)
+
+
+
+for minutecounter in tqdm(range(int(datetimerange_mins))):
+    ...
 
 # 7th: Use location and timestamp-data together with onset-data to determine whether or not there has been an onset.
 
+if platform == "win32":
+    substorm_df = pd.read_csv('substorms.csv')
+else:
+    substorm_df = pd.read_csv(substorm_csv_path)
+
+lat_fsim = 61.76
+lon_fsim = 238.77
+
+min_lat_fsim = lat_fsim-10
+max_lat_fsim = lat_fsim+10
+min_lon_fsim = lon_fsim-10
+max_lon_fsim = lon_fsim+10
+
+print(substorm_df.columns)
+
+droplist = []
+
+for i in tqdm(range(len(substorm_df.index))):
+    substorm_lat = substorm_df['GLAT'][i]
+    substorm_lon = substorm_df['GLON'][i]
+
+    if min_lat_fsim <= substorm_lat <= max_lat_fsim and min_lon_fsim <= substorm_lon <= max_lon_fsim:
+        print(f"{substorm_lat} - {substorm_lon}")
+    else:
+        droplist.append(i)
+
+substorm_df.drop(labels=droplist, axis=0, inplace=True)
+substorm_df.reset_index(inplace=True)
+substorm_df.drop(labels=['index', 'MLT', 'MLAT', 'GLON', 'GLAT'], axis=1, inplace=True)
+print(substorm_df)
 
 # 8th: Create dataframe with timestamp (in 1 minute iters), whether or not there will be an onset in the next 15 mins, and the reduced features in bins
 
