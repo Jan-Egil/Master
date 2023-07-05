@@ -233,12 +233,25 @@ no_data_feats = [0 for i in range(len(new_df['averaged_feats'][0]))]
 datetimerange_mins = (datetime_stop-datetime_start).total_seconds()/60
 print(datetimerange_mins)
 
+empty_list = [0 for i in range(len(new_df['averaged_feats'][0]))]
+print(empty_list)
 
+print(new_df)
 
-for minutecounter in tqdm(range(int(datetimerange_mins))):
+for minutecounter in tqdm(range(5)):#int(datetimerange_mins))):
     deltatime = timedelta(minutes=minutecounter)
     temp_datetime = datetime_start + deltatime
-    print(temp_datetime)
+    if not temp_datetime in new_df['timestamp'].unique():
+        dict = {'averaged_feats': empty_list,
+                'timestamp': temp_datetime,
+                'loc': new_df['loc'][0]}
+        new_df2 = pd.DataFrame(dict)
+        new_df = pd.concat([new_df, new_df2], ignore_index=True)
+        new_df.reset_index()
+
+new_df.sort_values(['timestamp'], axis=0, ignore_index=True, inplace=True)
+print(new_df[0:10])
+
 """
 # 7th: Use location and timestamp-data together with onset-data to determine whether or not there has been an onset.
 
