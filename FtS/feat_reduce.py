@@ -90,13 +90,14 @@ print("Reduction done!\n")
 # 3rd: Connect the right features with the right locatons and timestamps in a new dataframe
 
 print("Placing reduced features, timestamps and location in new dataframe..")
-dict = {"feat_reduced": array_feats,
+dict = {"feat_reduced": list(array_feats),
         "timestamp": timestamps,
         "loc": loc}
 print(array_feats.shape)
 print(len(timestamps))
 print(len(loc))
 new_df = pd.DataFrame(dict, dtype=object)
+
 """
 for i in tqdm(range(1, num_points)):
     dict = {"feat_reduced": [array_feats[i]],
@@ -108,6 +109,7 @@ new_df.reset_index()
 del new_df2
 """
 print("Placement done!")
+print(new_df['feat_reduced'][0])
 
 # 4th: Save dataframe to file. Delete variable
 # Tip: Try to plot features against timestamps. See if you find some structure in the madness
