@@ -224,7 +224,7 @@ for i in tqdm(range(num_points)):
         set_hour = hour
 
 # 6.5th: Fill in the blank minutes that don't exist in the dataframe maybe?
-
+"""
 datetime_start = datetime(year=2012,
                           month=10,
                           day=1,
@@ -248,7 +248,7 @@ print(empty_list)
 
 print(new_df)
 
-for minutecounter in tqdm(range(5)):#int(datetimerange_mins))):
+for minutecounter in tqdm(range(int(datetimerange_mins))):
     deltatime = timedelta(minutes=minutecounter)
     temp_datetime = datetime_start + deltatime
     if not temp_datetime in new_df['timestamp'].unique():
@@ -261,15 +261,17 @@ for minutecounter in tqdm(range(5)):#int(datetimerange_mins))):
 
 new_df.sort_values(['timestamp'], axis=0, ignore_index=True, inplace=True)
 print(new_df[0:10])
-
 """
+
 # 7th: Use location and timestamp-data together with onset-data to determine whether or not there has been an onset.
 
+# Read substorm files
 if platform == "win32":
     substorm_df = pd.read_csv('substorms.csv')
 else:
     substorm_df = pd.read_csv(substorm_csv_path)
 
+# Filter out the substorms far away from source
 lat_fsim = 61.76
 lon_fsim = 238.77
 
@@ -280,8 +282,9 @@ max_lon_fsim = lon_fsim+10
 
 print(substorm_df.columns)
 
-droplist = []
 
+
+droplist = []
 for i in tqdm(range(len(substorm_df.index))):
     substorm_lat = substorm_df['GLAT'][i]
     substorm_lon = substorm_df['GLON'][i]
@@ -303,4 +306,3 @@ print(substorm_df)
 
 
 # 10th: 
-"""
