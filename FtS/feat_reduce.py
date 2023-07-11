@@ -268,40 +268,38 @@ def save_binned_to_file(new_df, save_path_binned):
     print("Done saving binned to file!\n")
 
 # 7th: Use location and timestamp-data together with onset-data to determine whether or not there has been an onset.
-"""
+
 # Read substorm files
-if platform == "win32":
-    substorm_df = pd.read_csv('substorms.csv')
-else:
+def substorm_extract_and_filter(df, substorm_csv_path):
     substorm_df = pd.read_csv(substorm_csv_path)
 
-# Filter out the substorms far away from source
-lat_fsim = 61.76
-lon_fsim = 238.77
+    # Filter out the substorms far away from source
+    lat_fsim = 61.76
+    lon_fsim = 238.77
 
-min_lat_fsim = lat_fsim-10
-max_lat_fsim = lat_fsim+10
-min_lon_fsim = lon_fsim-10
-max_lon_fsim = lon_fsim+10
+    min_lat_fsim = lat_fsim-10
+    max_lat_fsim = lat_fsim+10
+    min_lon_fsim = lon_fsim-10
+    max_lon_fsim = lon_fsim+10
 
-print(substorm_df.columns)
+    print(substorm_df.columns)
 
 
 
-droplist = []
-for i in tqdm(range(len(substorm_df.index))):
-    substorm_lat = substorm_df['GLAT'][i]
-    substorm_lon = substorm_df['GLON'][i]
+    droplist = []
+    for i in tqdm(range(len(substorm_df.index))):
+        substorm_lat = substorm_df['GLAT'][i]
+        substorm_lon = substorm_df['GLON'][i]
 
-    if min_lat_fsim <= substorm_lat <= max_lat_fsim and min_lon_fsim <= substorm_lon <= max_lon_fsim:
-        print(f"{substorm_lat} - {substorm_lon}")
-    else:
-        droplist.append(i)
+        if min_lat_fsim <= substorm_lat <= max_lat_fsim and min_lon_fsim <= substorm_lon <= max_lon_fsim:
+            print(f"{substorm_lat} - {substorm_lon}")
+        else:
+            droplist.append(i)
 
-substorm_df.drop(labels=droplist, axis=0, inplace=True)
-substorm_df.reset_index(inplace=True)
-substorm_df.drop(labels=['index', 'MLT', 'MLAT', 'GLON', 'GLAT'], axis=1, inplace=True)
-print(substorm_df)
+    substorm_df.drop(labels=droplist, axis=0, inplace=True)
+    substorm_df.reset_index(inplace=True)
+    substorm_df.drop(labels=['index', 'MLT', 'MLAT', 'GLON', 'GLAT'], axis=1, inplace=True)
+    print(substorm_df)
 
 # 8th: Create dataframe with timestamp (in 1 minute iters), whether or not there will be an onset in the next 15 mins, and the reduced features in bins
 
@@ -310,7 +308,7 @@ print(substorm_df)
 
 
 # 10th: 
-"""
+
 
 if __name__ == "__main__":
     if len(argv) > 1:
