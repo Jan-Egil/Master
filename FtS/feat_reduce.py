@@ -348,8 +348,8 @@ if __name__ == "__main__":
     if len(argv) > 1:
         if argv[1] == 'test':
             platform = 'win32'
-    
-    # Step 1: Take features, reduce features, save to file
+
+    # Step 0: Define paths
     paths = define_paths()
     cdfpath = paths[0]
     save_path = paths[1]
@@ -358,41 +358,48 @@ if __name__ == "__main__":
     substorm_csv_path = paths[4]
     master_df_path = paths[5]
     cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path = define_paths()
-    """
-    df = fetch_initial_data(save_path)
+    
+    # Step 1: Take features, reduce features, save to file
+    y_or_n = input("Do you want to reduce the features? [Y/n] ")
 
-    array_feats, timestamps, loc = separate_dataframe_contents(df)
+    if y_or_n == "Y" or y_or_n == "y":
+        df = fetch_initial_data(save_path)
 
-    array_feats = scale_and_reduce(array_feats)
+        array_feats, timestamps, loc = separate_dataframe_contents(df)
 
-    new_df = connect_reduced_with_timestamps_loc(array_feats, timestamps, loc)
+        array_feats = scale_and_reduce(array_feats)
 
-    del array_feats, timestamps, loc
+        new_df = connect_reduced_with_timestamps_loc(array_feats, timestamps, loc)
 
-    save_reduced_to_file(new_df, save_path_reduced)
+        del array_feats, timestamps, loc
 
-    del new_df, df
+        save_reduced_to_file(new_df, save_path_reduced)
+
+        del new_df, df
 
     # Step 2: Take reduced features, bin together, save to file.
+    y_or_n = input("Do you want to bin the features? [Y/n] ")
 
-    df = extract_reduced_from_file(save_path_reduced)
+    if y_or_n == "Y" or y_or_n == "y":
+        df = extract_reduced_from_file(save_path_reduced)
 
-    new_df = feature_binning(df)
+        new_df = feature_binning(df)
 
-    save_binned_to_file(new_df, save_path_binned)
+        save_binned_to_file(new_df, save_path_binned)
 
-    del df, new_df
-    """
-    """
-    df = fetch_binned_from_file(save_path_binned)
+        del df, new_df
+    
+    # Step 3: Take binned features and substorm data, and create master dataframe
+    y_or_n = input("Do you want to create the master dataframe? [Y/n] ")
+    if y_or_n == "Y" or y_or_n == "y":
+        df = fetch_binned_from_file(save_path_binned)
 
-    substorm_df = substorm_extract_and_filter(df, substorm_csv_path)
+        substorm_df = substorm_extract_and_filter(df, substorm_csv_path)
 
-    master_df = create_master_dataframe(df, substorm_df)
+        master_df = create_master_dataframe(df, substorm_df)
 
-    save_master_dataframe(master_df, master_df_path)
-    """
+        save_master_dataframe(master_df, master_df_path)
+    
     master_df = fetch_master_dataframe(master_df_path)
-    print(master_df['substorm_onset'][86100:86160])
 
     
