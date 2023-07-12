@@ -11,6 +11,27 @@ from sklearn.decomposition import PCA
 
 def define_paths():
     if platform == 'win32':
+        cdfpath = "N/A"
+        save_path = "N/A"
+        save_path_reduced = "reduced_feats.h5"
+        save_path_binned = "binned_feats.h5"
+        substorm_csv_path = "substorms.csv"
+        master_df_path = "master_fsim.h5"
+    else:
+        curr_path = os.getcwd()
+        temp_dir = "/tempdir"
+        full_path = curr_path+temp_dir
+        cdfpath = full_path + "/temp.cdf"
+        save_path = "/scratch/feats_FtS/extracted_feats/"
+        save_path_reduced = "/scratch/feats_FtS/reduced_feats/reduced_feats.h5"
+        save_path_binned = "/scratch/feats_FtS/binned_feats/binned_feats.h5"
+        substorm_csv_path = "/scratch/substorms/substorms_forsyth.csv"
+        master_df_path = "/scratch/feats_FtS/master_df/master_fsim.h5"
+    return cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path
+    
+
+def fetch_initial_data(save_path):
+    if platform == 'win32':
         array_feats_first = np.random.random((100,1000))
         loc = ['fsim' for i in range(100)]
         timestamps = [datetime.now()+timedelta(seconds=20*i) for i in range(100)]
@@ -27,45 +48,18 @@ def define_paths():
             df2 = pd.DataFrame(dict)
             df = pd.concat([df, df2], ignore_index=True)
             df.reset_index()
-
-        del df2
-        del array_feats_first
-        del loc
-        del timestamps
-
-        cdfpath = "N/A"
-        save_path = "N/A"
-        save_path_reduced = "reduced_feats.h5"
-        save_path_binned = "binned_feats.h5"
-        substorm_csv_path = "substorms.csv"
-
-
-        print("Placement done!\n")
+        print("Placement done!")
     else:
-        # 0th: Define the paths
-        curr_path = os.getcwd()
-        temp_dir = "/tempdir"
-        full_path = curr_path+temp_dir
-        cdfpath = full_path + "/temp.cdf"
-        save_path = "/scratch/feats_FtS/extracted_feats/"
-        save_path_reduced = "/scratch/feats_FtS/reduced_feats/reduced_feats.h5"
-        save_path_binned = "/scratch/feats_FtS/binned_feats/binned_feats.h5"
-        substorm_csv_path = "/scratch/substorms/substorm_list.csv"
-
-        # 1st: Gather all features in one large array-like structure
-        # Tip: first make one big pandas dataframe, then turn that into array
         print("Extracting the data from file")
         df = pd.read_hdf(save_path+f"iter_0_loc_fsim.h5", key='features')
-
+        
         for iter in tqdm(range(1,1686)):
             df2 = pd.read_hdf(save_path+f"iter_{iter}_loc_fsim.h5", key='features')
             df = pd.concat([df, df2], ignore_index=True)
             df.reset_index()
         del df2
         print("Data extraction done!\n")
-    
-    return df, cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path
-    
+    return df
 
 def separate_dataframe_contents(df):
 # Define and extract features-column into its own array
@@ -126,7 +120,7 @@ def extract_reduced_from_file(save_path_reduced):
     df = pd.read_hdf(save_path_reduced, key=f'reduced_feats')
     df.sort_values(by='timestamp', inplace=True, ignore_index=True)
     df.reset_index()
-    
+
     print("File extraction complete!\n")
     return df
 
@@ -220,52 +214,23 @@ def feature_binning(df):
     print("Finished binning features together!\n")
     return new_df
 
-# 6.5th: Fill in the blank minutes that don't exist in the dataframe maybe?
-
-"""
-datetime_start = datetime(year=2012,
-                          month=10,
-                          day=1,
-                          hour=0,
-                          minute=0,
-                          second=0)
-datetime_stop = datetime(year=2013,
-                         month=3,
-                         day=1,
-                         hour=0,
-                         minute=0,
-                         second=0)
-
-no_data_feats = [0 for i in range(len(new_df['averaged_feats'][0]))]
-
-datetimerange_mins = (datetime_stop-datetime_start).total_seconds()/60
-print(datetimerange_mins)
-
-empty_list = [0 for i in range(len(new_df['averaged_feats'][0]))]
-print(empty_list)
-
-print(new_df)
-
-for minutecounter in tqdm(range(int(datetimerange_mins))):
-    deltatime = timedelta(minutes=minutecounter)
-    temp_datetime = datetime_start + deltatime
-    if not temp_datetime in new_df['timestamp'].unique():
-        dict = {'averaged_feats': empty_list,
-                'timestamp': temp_datetime,
-                'loc': new_df['loc'][0]}
-        new_df2 = pd.DataFrame(dict)
-        new_df = pd.concat([new_df, new_df2], ignore_index=True)
-        new_df.reset_index()
-
-new_df.sort_values(['timestamp'], axis=0, ignore_index=True, inplace=True)
-print(new_df[0:10])
-"""
-
 # 7th: Save binned data to file
 def save_binned_to_file(new_df, save_path_binned):
     print("Saving binned features to file..")
     new_df.to_hdf(save_path_binned, key=f"binned_feats", mode='w')
     print("Done saving binned to file!\n")
+
+# 8th: Extract binned data from file
+
+def fetch_binned_from_file(save_path_binned):
+    print("Started extraction of binned feature data..")
+
+    df = pd.read_hdf(save_path_binned, key=f'binned_feats')
+    df.sort_values(by='timestamp', inplace=True, ignore_index=True)
+    df.reset_index()
+
+    print("Finished extracting binned feature data!\n")
+    return df
 
 # 7th: Use location and timestamp-data together with onset-data to determine whether or not there has been an onset.
 
@@ -277,38 +242,107 @@ def substorm_extract_and_filter(df, substorm_csv_path):
     lat_fsim = 61.76
     lon_fsim = 238.77
 
-    min_lat_fsim = lat_fsim-10
-    max_lat_fsim = lat_fsim+10
-    min_lon_fsim = lon_fsim-10
-    max_lon_fsim = lon_fsim+10
-
-    print(substorm_df.columns)
+    min_lat_fsim = lat_fsim-15
+    max_lat_fsim = lat_fsim+15
+    min_lon_fsim = lon_fsim-15
+    max_lon_fsim = lon_fsim+15
 
 
 
     droplist = []
+    print("Removing substorms that are too far away...")
     for i in tqdm(range(len(substorm_df.index))):
         substorm_lat = substorm_df['GLAT'][i]
         substorm_lon = substorm_df['GLON'][i]
 
         if min_lat_fsim <= substorm_lat <= max_lat_fsim and min_lon_fsim <= substorm_lon <= max_lon_fsim:
-            print(f"{substorm_lat} - {substorm_lon}")
+            continue
         else:
             droplist.append(i)
 
     substorm_df.drop(labels=droplist, axis=0, inplace=True)
     substorm_df.reset_index(inplace=True)
     substorm_df.drop(labels=['index', 'MLT', 'MLAT', 'GLON', 'GLAT'], axis=1, inplace=True)
+    print("Removed substorms too far away!\n")
+
+    print("Removing substorms without coverage the last 45 minutes before event..")
+    droplist = []
+    
+    for i in tqdm(range(len(substorm_df.index))):
+        substorm_onset_time = substorm_df['Date_UTC'][i]
+        year = int(substorm_onset_time[0:4])
+        month = int(substorm_onset_time[5:7])
+        date = int(substorm_onset_time[8:10])
+        hour = int(substorm_onset_time[11:13])
+        minute = int(substorm_onset_time[14:16])
+        second = 0
+        substorm_onset_time_datetime = datetime(year=year,
+                                                month=month,
+                                                day=date,
+                                                hour=hour,
+                                                minute=minute,
+                                                second=second)
+        for j in range(45):
+            checktime = substorm_onset_time_datetime - timedelta(minutes=j)
+            if not checktime in set(df['timestamp']):
+                droplist.append(i)
+                break
+
+
+    substorm_df.drop(labels=droplist, axis=0, inplace=True)
+    substorm_df.reset_index(inplace=True)
+    substorm_df.drop(labels=['index'], axis=1, inplace=True)
+
+    print("Removed substorms without feature data!")
     print(substorm_df)
+    return substorm_df
 
 # 8th: Create dataframe with timestamp (in 1 minute iters), whether or not there will be an onset in the next 15 mins, and the reduced features in bins
 
+def create_master_dataframe(df, substorm_df):
+    print("Creating the final master dataframe..")
+
+    df['substorm_onset'] = 0
+    for i in tqdm(range(len(substorm_df.index))):
+        substorm_onset_time = substorm_df['Date_UTC'][i]
+        year = int(substorm_onset_time[0:4])
+        month = int(substorm_onset_time[5:7])
+        date = int(substorm_onset_time[8:10])
+        hour = int(substorm_onset_time[11:13])
+        minute = int(substorm_onset_time[14:16])
+        second = 0
+        substorm_onset_time_datetime = datetime(year=year,
+                                                month=month,
+                                                day=date,
+                                                hour=hour,
+                                                minute=minute,
+                                                second=second)
+        for j in range(15):
+            checktime = substorm_onset_time_datetime - timedelta(minutes=j)
+            idx = df.index[df['timestamp'] == checktime].tolist()[0]
+            #print(idx)
+            df.at[idx,'substorm_onset'] = 1
+    
+    print("Finished creating the final master dataframe!\n")
+    print(df)
+    return df
 
 # 9th: Save dataframe to file. Delete variabele.
 
+def save_master_dataframe(master_df, master_df_path):
+    print("Saving master dataframe to file..")
+    master_df.to_hdf(master_df_path, key=f"final_feats", mode='w')
+    print("Master dataframe saved to file!\n")
 
-# 10th: 
+def fetch_master_dataframe(master_df_path):
+    print("Fetching the master dataframe from file..")
 
+    master_df = pd.read_hdf(master_df_path, key=f'final_feats')
+    master_df.sort_values(by='timestamp', inplace=True, ignore_index=True)
+    master_df.reset_index()
+
+    print("Master dataframe has been fetched!\n")
+    return master_df
 
 if __name__ == "__main__":
     if len(argv) > 1:
@@ -316,7 +350,16 @@ if __name__ == "__main__":
             platform = 'win32'
     
     # Step 1: Take features, reduce features, save to file
-    df, cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path = define_paths()
+    paths = define_paths()
+    cdfpath = paths[0]
+    save_path = paths[1]
+    save_path_reduced = paths[2]
+    save_path_binned = paths[3]
+    substorm_csv_path = paths[4]
+    master_df_path = paths[5]
+    cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path = define_paths()
+    """
+    df = fetch_initial_data(save_path)
 
     array_feats, timestamps, loc = separate_dataframe_contents(df)
 
@@ -339,3 +382,17 @@ if __name__ == "__main__":
     save_binned_to_file(new_df, save_path_binned)
 
     del df, new_df
+    """
+    """
+    df = fetch_binned_from_file(save_path_binned)
+
+    substorm_df = substorm_extract_and_filter(df, substorm_csv_path)
+
+    master_df = create_master_dataframe(df, substorm_df)
+
+    save_master_dataframe(master_df, master_df_path)
+    """
+    master_df = fetch_master_dataframe(master_df_path)
+    print(master_df['substorm_onset'][86100:86160])
+
+    
