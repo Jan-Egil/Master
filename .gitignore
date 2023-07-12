@@ -6,6 +6,9 @@ __pycache__/
 # CDF-files
 *.cdf
 
+#.csv-files
+*.csv
+
 # H5-files
 *.h5
 
