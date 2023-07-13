@@ -77,3 +77,14 @@ for train_idxs, test_idxs in kfold.split(array_feats):
     print(score, score2)
     #precision = precision_score(Y_test, Y_pred)
     #print(precision)
+
+# Print the amount of data with onset
+tot = 0
+real = 0
+for elem in substorm_onset:
+    tot += 1
+    if elem == 1:
+        real += 1
+
+print(real/tot)
+# After print: roughly 1.2% of data reports an onset
