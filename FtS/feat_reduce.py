@@ -17,6 +17,7 @@ def define_paths():
         save_path_binned = "binned_feats.h5"
         substorm_csv_path = "substorms.csv"
         master_df_path = "master_fsim.h5"
+        master_df_trainable_path = "master_trainable_fsim.h5"
     else:
         curr_path = os.getcwd()
         temp_dir = "/tempdir"
@@ -27,7 +28,8 @@ def define_paths():
         save_path_binned = "/scratch/feats_FtS/binned_feats/binned_feats.h5"
         substorm_csv_path = "/scratch/substorms/substorms_forsyth.csv"
         master_df_path = "/scratch/feats_FtS/master_df/master_fsim.h5"
-    return cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path
+        master_df_trainable_path = "/scratch/feats_FtS/master_df/master_trainable_fsim.h5"
+    return cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path, master_df_trainable_path
     
 
 def fetch_initial_data(save_path):
@@ -320,7 +322,6 @@ def create_master_dataframe(df, substorm_df):
         for j in range(15):
             checktime = substorm_onset_time_datetime - timedelta(minutes=j)
             idx = df.index[df['timestamp'] == checktime].tolist()[0]
-            #print(idx)
             df.at[idx,'substorm_onset'] = 1
     
     print("Finished creating the final master dataframe!\n")
@@ -344,6 +345,33 @@ def fetch_master_dataframe(master_df_path):
     print("Master dataframe has been fetched!\n")
     return master_df
 
+def make_trainable_column(master_df):
+    print("Making master df with trainable column..")
+    master_df['trainable'] = 0
+
+    for i in tqdm(range(len(master_df.index))):
+        trigger = 0
+        df_time = master_df['timestamp'][i]
+        for j in range(30):
+            idx = i-j
+            if idx <= 0:
+                trigger = 1
+                continue
+            checktime = df_time- timedelta(minutes=j)
+            df_time_prev = master_df['timestamp'][idx]
+            if not checktime == df_time_prev:
+                trigger = 1
+        if trigger == 0:
+            master_df.at[i, 'trainable'] = 1
+
+    print("Finished making master df with trainable column!\n")
+    return master_df
+
+def save_trainable_master_df(master_trainable_df, master_df_trainable_path):
+    print("Saving master df with trainable columns to file..")
+    master_trainable_df.to_hdf(master_df_trainable_path, key=f"final_feats", mode='w')
+    print("Master df with trainable columns saved to file!\n")
+
 if __name__ == "__main__":
     if len(argv) > 1:
         if argv[1] == 'test':
@@ -357,7 +385,8 @@ if __name__ == "__main__":
     save_path_binned = paths[3]
     substorm_csv_path = paths[4]
     master_df_path = paths[5]
-    cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path = define_paths()
+    master_df_trainable_path = paths[6]
+    #cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path = define_paths()
     
     # Step 1: Take features, reduce features, save to file
     y_or_n = input("Do you want to reduce the features? [Y/n] ")
@@ -399,7 +428,17 @@ if __name__ == "__main__":
         master_df = create_master_dataframe(df, substorm_df)
 
         save_master_dataframe(master_df, master_df_path)
+
+        del master_df
     
-    master_df = fetch_master_dataframe(master_df_path)
+
+    # Step 4: Take master dataframe, make trainable-column, insert and save
+    y_or_n = input("Do you want to create the master dataframe w/ trainable column? [Y/n] ")
+    if y_or_n == "Y" or y_or_n == "y":
+        master_df = fetch_master_dataframe(master_df_path)
+
+        master_trainable_df = make_trainable_column(master_df)
+
+        save_trainable_master_df(master_trainable_df, master_df_trainable_path)
 
     

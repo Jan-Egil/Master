@@ -2,9 +2,13 @@ import numpy as np
 import h5py
 import pandas as pd
 import matplotlib.pyplot as plt
+from sys import platform
 from tqdm import tqdm
 
-master_df_path = "/scratch/feats_FtS/master_df/master_fsim.h5"
+if platform == "win32":
+    master_df_path = 'master_fsim.h5'
+else:
+    master_df_path = "/scratch/feats_FtS/master_df/master_fsim.h5"
 master_df = pd.read_hdf(master_df_path, key=f"final_feats")
 master_df.sort_values(by='timestamp', inplace=True, ignore_index=True)
 
