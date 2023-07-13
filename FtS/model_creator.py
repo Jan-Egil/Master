@@ -5,7 +5,8 @@ from tqdm import tqdm
 from sys import platform
 
 from sklearn.model_selection import KFold
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import RidgeClassifier
+from sklearn.metrics import precision_score, recall_score
 
 if platform == "win32":
     master_df_path = "master_trainable_fsim.h5"
@@ -37,13 +38,13 @@ timestamps = np.array(timestamps_list)
 # Tip 2: k-fold cross-validation
 
 k = 5
-kfold = KFold(n_splits=k)
-
-ridge = Ridge()
+kfold = KFold(n_splits=k, shuffle=True)
+ridge_classifier = RidgeClassifier()
 
 for train_idxs, test_idxs in kfold.split(array_feats):
     train_idxs_filtered = []
     test_idxs_filtered = []
+    print(test_idxs)
 
     for train_idx in train_idxs:
         if trainable[train_idx] == 1:
@@ -55,18 +56,24 @@ for train_idxs, test_idxs in kfold.split(array_feats):
     num_imgs_train = len(train_idxs_filtered)
     num_imgs_test = len(test_idxs_filtered)
 
-    x_train = np.zeros((num_imgs_train, num_feats*30))
-    x_test = np.zeros((num_imgs_test, num_feats*30))
-    y_train = substorm_onset[train_idxs_filtered]
-    y_test = substorm_onset[test_idxs_filtered]
+    X_train = np.zeros((num_imgs_train, num_feats*30))
+    X_test = np.zeros((num_imgs_test, num_feats*30))
+    Y_train = substorm_onset[train_idxs_filtered]
+    Y_test = substorm_onset[test_idxs_filtered]
 
     i = 0
     j = 0
     for train_idx in train_idxs_filtered:
-        x_train[i] = np.array(array_feats[train_idx-29:train_idx+1]).flatten()
+        X_train[i] = np.array(array_feats[train_idx-29:train_idx+1]).flatten()
         i += 1
     for test_idx in test_idxs_filtered:
-        x_test[j] = np.array(array_feats[test_idx-29:test_idx+1]).flatten()
+        X_test[j] = np.array(array_feats[test_idx-29:test_idx+1]).flatten()
         j += 1
-    
-    #print("yee")
+    del i, j
+
+    clf = ridge_classifier.fit(X_train, Y_train)
+    score = clf.score(X_train, Y_train)
+    score2 = clf.score(X_test, Y_test)
+    print(score, score2)
+    #precision = precision_score(Y_test, Y_pred)
+    #print(precision)
