@@ -39,7 +39,7 @@ timestamps = np.array(timestamps_list)
 
 k = 5
 kfold = KFold(n_splits=k, shuffle=True)
-ridge_classifier = RidgeClassifier()
+ridge_classifier = RidgeClassifier(class_weight='balanced')
 
 for train_idxs, test_idxs in kfold.split(array_feats):
     train_idxs_filtered = []
@@ -60,16 +60,12 @@ for train_idxs, test_idxs in kfold.split(array_feats):
     X_test = np.zeros((num_imgs_test, num_feats*30))
     Y_train = substorm_onset[train_idxs_filtered]
     Y_test = substorm_onset[test_idxs_filtered]
-
-    i = 0
-    j = 0
-    for train_idx in train_idxs_filtered:
-        X_train[i] = np.array(array_feats[train_idx-29:train_idx+1]).flatten()
-        i += 1
-    for test_idx in test_idxs_filtered:
-        X_test[j] = np.array(array_feats[test_idx-29:test_idx+1]).flatten()
-        j += 1
-    del i, j
+    for i, train_idx in enumerate(train_idxs_filtered):
+        X_train[i] = array_feats[train_idx-29:train_idx+1].flatten()
+    for j, test_idx in enumerate(test_idxs_filtered):
+        X_test[j] = array_feats[test_idx-29:test_idx+1].flatten()
+        
+    
 
     clf = ridge_classifier.fit(X_train, Y_train)
     score = clf.score(X_train, Y_train)
@@ -77,7 +73,7 @@ for train_idxs, test_idxs in kfold.split(array_feats):
     print(score, score2)
     #precision = precision_score(Y_test, Y_pred)
     #print(precision)
-
+"""
 # Print the amount of data with onset
 tot = 0
 real = 0
@@ -88,3 +84,4 @@ for elem in substorm_onset:
 
 print(real/tot)
 # After print: roughly 1.2% of data reports an onset
+"""
