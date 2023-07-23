@@ -4,9 +4,10 @@ import pandas as pd
 from tqdm import tqdm
 from sys import platform
 
-from sklearn.model_selection import KFold
-from sklearn.linear_model import RidgeClassifier
-from sklearn.metrics import precision_score, recall_score
+from sklearn.model_selection import KFold, train_test_split
+from sklearn.linear_model import RidgeClassifier, RidgeClassifierCV
+from sklearn.metrics import precision_score, recall_score, accuracy_score
+from sklearn.svm import SVC
 
 if platform == "win32":
     master_df_path = "master_trainable_fsim.h5"
@@ -35,44 +36,151 @@ timestamps = np.array(timestamps_list)
 
 # Step 2: split training and testing data in smart manner
 # Tip 1: 30/70 split
-# Tip 2: k-fold cross-validation
+# Tip 2: k-fold cross-validation (Went with this)
+# NB: Make sure to deal with imbalanced dataset!
 
-k = 5
-kfold = KFold(n_splits=k, shuffle=True)
-ridge_classifier = RidgeClassifier(class_weight='balanced')
+y_or_n = input("Want to do simple Ridge? [Y/n] ")
 
-for train_idxs, test_idxs in kfold.split(array_feats):
-    train_idxs_filtered = []
-    test_idxs_filtered = []
-    print(test_idxs)
+if y_or_n == "Y" or y_or_n == "y":
+    k = 5
+    kfold = KFold(n_splits=k, shuffle=True)
+    ridge_classifier = RidgeClassifier(class_weight='balanced')
 
-    for train_idx in train_idxs:
-        if trainable[train_idx] == 1:
-            train_idxs_filtered.append(train_idx)
-    for test_idx in test_idxs:
-        if trainable[test_idx] == 1:
-            test_idxs_filtered.append(test_idx)
+    for train_idxs, test_idxs in kfold.split(array_feats):
+        train_idxs_filtered = []
+        test_idxs_filtered = []
+        print(test_idxs)
+
+        for train_idx in train_idxs:
+            if trainable[train_idx] == 1:
+                train_idxs_filtered.append(train_idx)
+        for test_idx in test_idxs:
+            if trainable[test_idx] == 1:
+                test_idxs_filtered.append(test_idx)
+
+        num_imgs_train = len(train_idxs_filtered)
+        num_imgs_test = len(test_idxs_filtered)
+
+        X_train = np.zeros((num_imgs_train, num_feats*30))
+        X_test = np.zeros((num_imgs_test, num_feats*30))
+        Y_train = substorm_onset[train_idxs_filtered]
+        Y_test = substorm_onset[test_idxs_filtered]
+        for i, train_idx in enumerate(train_idxs_filtered):
+            X_train[i] = array_feats[train_idx-29:train_idx+1].flatten()
+        for j, test_idx in enumerate(test_idxs_filtered):
+            X_test[j] = array_feats[test_idx-29:test_idx+1].flatten()
+            
+
+
+        clf = ridge_classifier.fit(X_train, Y_train)
+        Y_pred = clf.predict(X_test)
+        score = clf.score(X_train, Y_train)
+        score2 = clf.score(X_test, Y_test)
+        print(f"Train: {int(score*1000)/10}%\n Test: {int(score2*1000)/10}%\n")
+        #precision = precision_score(Y_test, Y_pred)
+        #print(precision)
+        idxs = []
+        for idx, val in enumerate(Y_test):
+            if val == 1:
+                idxs.append(idx)
+        Y_pred_subset = Y_pred[idxs]
+        Y_test_subset = Y_test[idxs]
+        substorm_accuracy = accuracy_score(Y_test_subset, Y_pred_subset)
+        print(f"\n{substorm_accuracy}\n\n")
+
+y_or_n = input("Want to do Ridge with the new and improved cross validation? [Y/n] (unfinished)")
+if y_or_n == "Y" or y_or_n == "y":
+    k = 5
+    ridge_classifier = RidgeClassifierCV(class_weight='balanced', cv=k)
     
-    num_imgs_train = len(train_idxs_filtered)
-    num_imgs_test = len(test_idxs_filtered)
+    for train_idxs, test_idxs in kfold.split(array_feats):
+        train_idxs_filtered = []
+        test_idxs_filtered = []
+        print(test_idxs)
 
-    X_train = np.zeros((num_imgs_train, num_feats*30))
-    X_test = np.zeros((num_imgs_test, num_feats*30))
-    Y_train = substorm_onset[train_idxs_filtered]
-    Y_test = substorm_onset[test_idxs_filtered]
-    for i, train_idx in enumerate(train_idxs_filtered):
-        X_train[i] = array_feats[train_idx-29:train_idx+1].flatten()
-    for j, test_idx in enumerate(test_idxs_filtered):
-        X_test[j] = array_feats[test_idx-29:test_idx+1].flatten()
-        
-    
+        for train_idx in train_idxs:
+            if trainable[train_idx] == 1:
+                train_idxs_filtered.append(train_idx)
+        for test_idx in test_idxs:
+            if trainable[test_idx] == 1:
+                test_idxs_filtered.append(test_idx)
 
-    clf = ridge_classifier.fit(X_train, Y_train)
-    score = clf.score(X_train, Y_train)
-    score2 = clf.score(X_test, Y_test)
-    print(score, score2)
-    #precision = precision_score(Y_test, Y_pred)
-    #print(precision)
+        num_imgs_train = len(train_idxs_filtered)
+        num_imgs_test = len(test_idxs_filtered)
+
+        X_train = np.zeros((num_imgs_train, num_feats*30))
+        X_test = np.zeros((num_imgs_test, num_feats*30))
+        Y_train = substorm_onset[train_idxs_filtered]
+        Y_test = substorm_onset[test_idxs_filtered]
+        for i, train_idx in enumerate(train_idxs_filtered):
+            X_train[i] = array_feats[train_idx-29:train_idx+1].flatten()
+        for j, test_idx in enumerate(test_idxs_filtered):
+            X_test[j] = array_feats[test_idx-29:test_idx+1].flatten()
+            
+
+
+        clf = ridge_classifier.fit(X_train, Y_train)
+        Y_pred = clf.predict(X_test)
+        score = clf.score(X_train, Y_train)
+        score2 = clf.score(X_test, Y_test)
+        print(f"Train: {int(score*1000)/10}%\n Test: {int(score2*1000)/10}%\n")
+        #precision = precision_score(Y_test, Y_pred)
+        #print(precision)
+        idxs = []
+        for idx, val in enumerate(Y_test):
+            if val == 1:
+                idxs.append(idx)
+        Y_pred_subset = Y_pred[idxs]
+        Y_test_subset = Y_test[idxs]
+        substorm_accuracy = accuracy_score(Y_test_subset, Y_pred_subset)
+        print(f"\n{substorm_accuracy}\n\n")
+
+
+n_samples = len(substorm_onset)
+indices = np.arange(n_samples)
+idxs_train, idxs_test = train_test_split(indices, test_size=0.3)
+
+train_idxs_filtered = []
+test_idxs_filtered = []
+for train_idx in idxs_train:
+    if trainable[train_idx] == 1:
+        train_idxs_filtered.append(train_idx)
+for test_idx in idxs_test:
+    if trainable[test_idx] == 1:
+        test_idxs_filtered.append(test_idx)
+
+num_imgs_train = len(train_idxs_filtered)
+num_imgs_test = len(test_idxs_filtered)
+
+X_train = np.zeros((num_imgs_train, num_feats*30))
+X_test = np.zeros((num_imgs_test, num_feats*30))
+Y_train = substorm_onset[train_idxs_filtered]
+Y_test = substorm_onset[test_idxs_filtered]
+
+for i, train_idx in enumerate(train_idxs_filtered):
+    X_train[i] = array_feats[train_idx-29:train_idx+1].flatten()
+for j, test_idx in enumerate(test_idxs_filtered):
+    X_test[j] = array_feats[test_idx-29:test_idx+1].flatten()
+
+SVM_classifier = SVC(class_weight='balanced')
+
+print("Started classifying")
+clf = SVM_classifier.fit(X_train, Y_train)
+print("Started predicting")
+Y_pred = clf.predict(X_test)
+score = clf.score(X_train, Y_train)
+score2 = clf.score(X_test, Y_test)
+print(f"Train: {int(score*1000)/10}%\n Test: {int(score2*1000)/10}%\n")
+
+idxs = []
+for idx, val in enumerate(Y_test):
+    if val == 1:
+        idxs.append(idx)
+Y_pred_subset = Y_pred[idxs]
+Y_test_subset = Y_test[idxs]
+substorm_accuracy = accuracy_score(Y_test_subset, Y_pred_subset)
+print(f"\n{int(substorm_accuracy*1000)/10}%\n\n")
+
 """
 # Print the amount of data with onset
 tot = 0
