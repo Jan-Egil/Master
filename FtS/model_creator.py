@@ -164,6 +164,7 @@ for j, test_idx in enumerate(test_idxs_filtered):
 
 SVM_classifier = SVC(class_weight='balanced')
 
+
 print("Started classifying")
 clf = SVM_classifier.fit(X_train, Y_train)
 print("Started predicting")
