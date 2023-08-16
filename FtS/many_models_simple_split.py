@@ -33,6 +33,9 @@ master_df.sort_values(by='timestamp', inplace=True, ignore_index=True)
 ----------------------------------
 """
 
+k = 5
+kfold = KFold(n_splits=k, shuffle=True)
+
 # The models (uncomment the one to try out)
 
 #model = RidgeClassifier(class_weight='balanced')       # Decently bad, but fast
@@ -48,6 +51,13 @@ master_df.sort_values(by='timestamp', inplace=True, ignore_index=True)
 """
 ---------------------------------
 """
+
+train_score_list = []
+test_score_list = []
+recall_list = []
+fitting_time_list = []
+predicting_time_list = []
+total_time_list = []
 
 try:
     model
@@ -71,58 +81,74 @@ for i in tqdm(range(num_imgs)):
 timestamps = np.array(timestamps_list)
 
 
-n_samples = len(substorm_onset)
-indices = np.arange(n_samples)
-idxs_train, idxs_test = train_test_split(indices, test_size=0.3)
-
-train_idxs_filtered = []
-test_idxs_filtered = []
-for train_idx in idxs_train:
-    if trainable[train_idx] == 1:
-        train_idxs_filtered.append(train_idx)
-for test_idx in idxs_test:
-    if trainable[test_idx] == 1:
-        test_idxs_filtered.append(test_idx)
-
-num_imgs_train = len(train_idxs_filtered)
-num_imgs_test = len(test_idxs_filtered)
-
-X_train = np.zeros((num_imgs_train, num_feats*30))
-X_test = np.zeros((num_imgs_test, num_feats*30))
-Y_train = substorm_onset[train_idxs_filtered]
-Y_test = substorm_onset[test_idxs_filtered]
-
-for i, train_idx in enumerate(train_idxs_filtered):
-    X_train[i] = array_feats[train_idx-29:train_idx+1].flatten()
-for j, test_idx in enumerate(test_idxs_filtered):
-    X_test[j] = array_feats[test_idx-29:test_idx+1].flatten()
+#n_samples = len(substorm_onset)
+#indices = np.arange(n_samples)
+#idxs_train, idxs_test = train_test_split(indices, test_size=0.2)
 
 
-print("Started classifying")
+for idxs_train, idxs_test in kfold.split(array_feats):
+    train_idxs_filtered = []
+    test_idxs_filtered = []
+    for train_idx in idxs_train:
+        if trainable[train_idx] == 1:
+            train_idxs_filtered.append(train_idx)
+    for test_idx in idxs_test:
+        if trainable[test_idx] == 1:
+            test_idxs_filtered.append(test_idx)
 
-start_fitting = perf_counter()
-clf = model.fit(X_train, Y_train)
-stop_fitting = perf_counter()
-fitting_time = stop_fitting-start_fitting
+    num_imgs_train = len(train_idxs_filtered)
+    num_imgs_test = len(test_idxs_filtered)
 
-print("Started predicting")
+    X_train = np.zeros((num_imgs_train, num_feats*30))
+    X_test = np.zeros((num_imgs_test, num_feats*30))
+    Y_train = substorm_onset[train_idxs_filtered]
+    Y_test = substorm_onset[test_idxs_filtered]
 
-start_predicting = perf_counter()
-Y_pred = clf.predict(X_test)
-stop_predicting = perf_counter()
-predicting_time = stop_predicting-start_predicting
-total_time = fitting_time+predicting_time
+    for i, train_idx in enumerate(train_idxs_filtered):
+        X_train[i] = array_feats[train_idx-29:train_idx+1].flatten()
+    for j, test_idx in enumerate(test_idxs_filtered):
+        X_test[j] = array_feats[test_idx-29:test_idx+1].flatten()
 
-score = clf.score(X_train, Y_train)
-score2 = clf.score(X_test, Y_test)
-print(f"\nTrain: {int(score*1000)/10}%\n Test: {int(score2*1000)/10}%\n")
 
-idxs = []
-for idx, val in enumerate(Y_test):
-    if val == 1:
-        idxs.append(idx)
-Y_pred_subset = Y_pred[idxs]
-Y_test_subset = Y_test[idxs]
-substorm_accuracy = accuracy_score(Y_test_subset, Y_pred_subset)
-print(f"\n{int(substorm_accuracy*1000)/10}%\n\n")
-print(f"\ntime spent..\nFitting: {fitting_time}\nPredicting: {predicting_time}\nTotal: {total_time}")
+    print("Started classifying")
+
+    start_fitting = perf_counter()
+    clf = model.fit(X_train, Y_train)
+    stop_fitting = perf_counter()
+    fitting_time = stop_fitting-start_fitting
+
+    print("Started predicting")
+
+    start_predicting = perf_counter()
+    Y_pred = clf.predict(X_test)
+    stop_predicting = perf_counter()
+    predicting_time = stop_predicting-start_predicting
+    total_time = fitting_time+predicting_time
+
+    score = clf.score(X_train, Y_train)
+    score2 = clf.score(X_test, Y_test)
+    print(f"\nTrain: {int(score*1000)/10}%\n Test: {int(score2*1000)/10}%\n")
+
+    idxs = []
+    for idx, val in enumerate(Y_test):
+        if val == 1:
+            idxs.append(idx)
+    Y_pred_subset = Y_pred[idxs]
+    Y_test_subset = Y_test[idxs]
+    substorm_accuracy = accuracy_score(Y_test_subset, Y_pred_subset)
+    print(f"\n{int(substorm_accuracy*1000)/10}%\n\n")
+    print(f"\ntime spent..\nFitting: {fitting_time}\nPredicting: {predicting_time}\nTotal: {total_time}\n\n")
+
+    train_score_list.append(score*100)
+    test_score_list.append(score2*100)
+    recall_list.append(substorm_accuracy*100)
+    fitting_time_list.append(fitting_time)
+    predicting_time_list.append(predicting_time)
+    total_time_list.append(total_time)
+
+print(f"training score: {np.mean(train_score_list)} ± {np.std(train_score_list)}")
+print(f"test score: {np.mean(test_score_list)} ± {np.std(test_score_list)}")
+print(f"Recall score: {np.mean(recall_list)} ± {np.std(recall_list)}")
+print(f"Fitting time: {np.mean(fitting_time_list)} ± {np.std(fitting_time_list)}")
+print(f"Predicting time: {np.mean(predicting_time_list)} ± {np.std(predicting_time_list)}")
+print(f"total time: {np.mean(total_time_list)} ± {np.std(total_time_list)}\n\n")
