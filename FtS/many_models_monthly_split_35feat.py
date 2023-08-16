@@ -15,7 +15,7 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
 
 from sklearn.model_selection import KFold, train_test_split
-from sklearn.metrics import precision_score, recall_score, accuracy_score
+from sklearn.metrics import precision_score, recall_score, accuracy_score, balanced_accuracy_score
 
 # Just to get away the error of the "missing model"
 if 0 == 1:
@@ -41,8 +41,8 @@ months_to_train = [10, 11, 12, 1, 2]
 #model = RidgeClassifier(class_weight='balanced')       # Wait
 #model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
 #model = SVC(class_weight='balanced')                   # Wait
-#model = SVC(class_weight='balanced', kernel="linear", max_iter=400)   # Wait
-model = GaussianNB()                                   # Wait
+model = SVC(class_weight='balanced', kernel="linear", max_iter=400)   # Wait
+#model = GaussianNB()                                   # Wait
 #model = MLPClassifier()                                # Wait
 #model = KNeighborsClassifier()                         # Wait
 #model = AdaBoostClassifier()                           # Wait
@@ -56,6 +56,9 @@ model = GaussianNB()                                   # Wait
 train_score_list = []
 test_score_list = []
 recall_list = []
+balanced_acc_list = []
+false_positive_list = []
+
 fitting_time_list = []
 predicting_time_list = []
 total_time_list = []
@@ -144,11 +147,17 @@ for month_to_train in months_to_train:
     Y_test_subset = Y_test[idxs]
     substorm_accuracy = accuracy_score(Y_test_subset, Y_pred_subset)
     print(f"\n{int(substorm_accuracy*1000)/10}%\n\n")
+
+    balanced_acc = balanced_accuracy_score(Y_test, Y_pred)
+    print(f"Balanced accuracy: {balanced_acc}\n")
+
     print(f"\ntime spent..\nFitting: {fitting_time}\nPredicting: {predicting_time}\nTotal: {total_time}\n\n")
 
     train_score_list.append(score*100)
     test_score_list.append(score2*100)
     recall_list.append(substorm_accuracy*100)
+    balanced_acc_list.append(balanced_acc*100)
+
     fitting_time_list.append(fitting_time)
     predicting_time_list.append(predicting_time)
     total_time_list.append(total_time)

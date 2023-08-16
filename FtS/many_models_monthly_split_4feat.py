@@ -15,7 +15,7 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
 
 from sklearn.model_selection import KFold, train_test_split
-from sklearn.metrics import precision_score, recall_score, accuracy_score
+from sklearn.metrics import precision_score, recall_score, accuracy_score, balanced_accuracy_score
 
 # Just to get away the error of the "missing model"
 if 0 == 1:
@@ -33,18 +33,19 @@ master_df.sort_values(by='timestamp', inplace=True, ignore_index=True)
 ----------------------------------
 """
 
-k = 5
-kfold = KFold(n_splits=k, shuffle=True)
+months_to_train = [10, 11, 12, 1, 2]
+#month_to_train = 11
 
 # The models (uncomment the one to try out)
 
-#model = RidgeClassifier(class_weight='balanced')       # Decently bad, but fast
+#model = RidgeClassifier(class_weight='balanced')       # Wait
 #model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
 #model = SVC(class_weight='balanced')                   # Wait
+model = SVC(class_weight='balanced', kernel="linear", max_iter=400)   # Wait
 #model = GaussianNB()                                   # Wait
 #model = MLPClassifier()                                # Wait
 #model = KNeighborsClassifier()                         # Wait
-#model = AdaBoostClassifier()                           # Shit and slow
+#model = AdaBoostClassifier()                           # Wait
 #model = RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1, class_weight='balanced') # Wait
 
 
@@ -55,6 +56,9 @@ kfold = KFold(n_splits=k, shuffle=True)
 train_score_list = []
 test_score_list = []
 recall_list = []
+balanced_acc_list = []
+false_positive_list = []
+
 fitting_time_list = []
 predicting_time_list = []
 total_time_list = []
@@ -80,13 +84,19 @@ for i in tqdm(range(num_imgs)):
     timestamps_list.append(master_df['timestamp'][i])
 timestamps = np.array(timestamps_list)
 
+n_samples = len(substorm_onset)
+indices = np.arange(n_samples)
 
-#n_samples = len(substorm_onset)
-#indices = np.arange(n_samples)
-#idxs_train, idxs_test = train_test_split(indices, test_size=0.2)
+for month_to_train in months_to_train:
+    idxs_train = []
+    idxs_test = []
+    for i in indices:
+        month = timestamps_list[i].month
+        if month == month_to_train:
+            idxs_test.append(i)
+        else:
+            idxs_train.append(i)
 
-
-for idxs_train, idxs_test in kfold.split(array_feats):
     train_idxs_filtered = []
     test_idxs_filtered = []
     for train_idx in idxs_train:
@@ -137,11 +147,17 @@ for idxs_train, idxs_test in kfold.split(array_feats):
     Y_test_subset = Y_test[idxs]
     substorm_accuracy = accuracy_score(Y_test_subset, Y_pred_subset)
     print(f"\n{int(substorm_accuracy*1000)/10}%\n\n")
+
+    balanced_acc = balanced_accuracy_score(Y_test, Y_pred)
+    print(f"Balanced accuracy: {balanced_acc}\n")
+
     print(f"\ntime spent..\nFitting: {fitting_time}\nPredicting: {predicting_time}\nTotal: {total_time}\n\n")
 
     train_score_list.append(score*100)
     test_score_list.append(score2*100)
     recall_list.append(substorm_accuracy*100)
+    balanced_acc_list.append(balanced_acc*100)
+
     fitting_time_list.append(fitting_time)
     predicting_time_list.append(predicting_time)
     total_time_list.append(total_time)

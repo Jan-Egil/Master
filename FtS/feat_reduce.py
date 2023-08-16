@@ -90,7 +90,8 @@ def scale_and_reduce(array_feats):
     print("Scaling done!\n")
 
     print("Reducing dimensionality of data..")
-    reducer = PCA(n_components=35)
+    n_reduced = 6
+    reducer = PCA(n_components=n_reduced)
     array_feats = reducer.fit_transform(array_feats)
     print("Reduction done!\n")
 

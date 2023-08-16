@@ -14,7 +14,7 @@ from sklearn.svm import SVC
 if platform == "win32":
     master_df_path = "master_trainable_fsim.h5"
 else:
-    master_df_path = "/scratch/feats_FtS/master_df/master_trainable_fsim.h5"
+    master_df_path = "/scratch/feats_FtS/master_df/master_trainable_fsim_35feat.h5"
 master_df = pd.read_hdf(master_df_path, key=f"final_feats")
 master_df.sort_values(by='timestamp', inplace=True, ignore_index=True)
 
