@@ -34,30 +34,18 @@ master_df.sort_values(by='timestamp', inplace=True, ignore_index=True)
 """
 
 months_to_train = [10, 11, 12, 1, 2]
-#month_to_train = 11
 
-# The models (uncomment the one to try out)
-
-#model = RidgeClassifier(class_weight='balanced')       # Wait
-#model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
-#model = SVC(class_weight='balanced')                   # Wait
-#model = SVC(class_weight='balanced', kernel="linear", max_iter=400)   # Wait
-#model = GaussianNB()                                   # Wait
-#model = MLPClassifier()                                # Wait
-#model = KNeighborsClassifier()                         # Wait
-#model = AdaBoostClassifier()                           # Wait
-#model = RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1, class_weight='balanced') # Wait
-
+alphas = np.logspace(-2,8,1000)
+recalls_per_alpha = np.zeros_like(alphas)
+balanced_acc_per_alpha = np.zeros_like(alphas)
+fitting_time_per_alpha = np.zeros_like(alphas)
+classification_time_per_alpha = np.zeros_like(alphas)
+total_time_per_alpha = np.zeros_like(alphas)
 
 """
 ---------------------------------
 """
-"""
-try:
-    model
-except NameError:
-    exit("\nWoops, you forgot to uncomment a model!\n")
-"""
+
 num_feats = master_df['averaged_feats'][0].shape[0]
 num_imgs = len(master_df.index)
 
@@ -73,13 +61,6 @@ for i in tqdm(range(num_imgs)):
     trainable[i] = master_df['trainable'][i]
     timestamps_list.append(master_df['timestamp'][i])
 timestamps = np.array(timestamps_list)
-
-alphas = np.logspace(-3,3,100)
-recalls_per_alpha = np.zeros_like(alphas)
-balanced_acc_per_alpha = np.zeros_like(alphas)
-fitting_time_per_alpha = np.zeros_like(alphas)
-classification_time_per_alpha = np.zeros_like(alphas)
-total_time_per_alpha = np.zeros_like(alphas)
 
 n_samples = len(substorm_onset)
 indices = np.arange(n_samples)

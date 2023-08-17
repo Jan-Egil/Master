@@ -25,7 +25,7 @@ if 0 == 1:
 if platform == "win32":
     master_df_path = "master_trainable_fsim.h5"
 else:
-    master_df_path = "/scratch/feats_FtS/master_df/master_trainable_fsim.h5"
+    master_df_path = "/scratch/feats_FtS/master_df/master_trainable_fsim_6feat.h5"
 master_df = pd.read_hdf(master_df_path, key=f"final_feats")
 master_df.sort_values(by='timestamp', inplace=True, ignore_index=True)
 
@@ -39,9 +39,9 @@ months_to_train = [10, 11, 12, 1, 2]
 # The models (uncomment the one to try out)
 
 #model = RidgeClassifier(class_weight='balanced')       # Wait
-#model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
+model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
 #model = SVC(class_weight='balanced')                   # Wait
-model = SVC(class_weight='balanced', kernel="linear", max_iter=400)   # Wait
+#model = SVC(class_weight='balanced', kernel="linear", max_iter=400)   # Wait
 #model = GaussianNB()                                   # Wait
 #model = MLPClassifier()                                # Wait
 #model = KNeighborsClassifier()                         # Wait
