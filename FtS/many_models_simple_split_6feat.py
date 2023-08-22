@@ -38,7 +38,7 @@ kfold = KFold(n_splits=k, shuffle=True)
 
 # The models (uncomment the one to try out)
 
-model = RidgeClassifier(class_weight='balanced')       # Decently bad, but fast
+#model = RidgeClassifier(class_weight='balanced')       # Decently bad, but fast
 #model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
 #model = SVC(class_weight='balanced')                   # Wait
 #model = GaussianNB()                                   # Wait
