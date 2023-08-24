@@ -15,7 +15,12 @@ master_df.sort_values(by='timestamp', inplace=True, ignore_index=True)
 months = [10, 11, 12, 1, 2]
 
 num_elems = len(master_df.index)
+print(master_df)
 print(master_df.columns)
+
+print(set(master_df['trainable']))
+print(master_df['substorm_onset'][450:500])
+
 
 substorm_dict = {}
 
@@ -29,7 +34,7 @@ for i in tqdm(range(num_elems)):
         substorm_key = month + "no"
     else:
         substorm_key = month + "yes"
-    
+
     if substorm_key in substorm_dict:
         substorm_dict[substorm_key] += 1
     else:
@@ -37,8 +42,10 @@ for i in tqdm(range(num_elems)):
 
 
 for month in months:
-    num_sub = substorm_dict[str(month) + "yes"]
+    if str(month)+"yes" in substorm_dict:
+        num_sub = substorm_dict[str(month) + "yes"]
+    else:
+        num_sub = 0
     num_tot = num_sub + substorm_dict[str(month) + "no"]
     prcnt = int((num_sub/num_tot)*10000)/100
     print(f"month: {month}\nnum substorms: {num_sub}\nnum total: {num_tot}\n percentage: {prcnt}%\n")
-    

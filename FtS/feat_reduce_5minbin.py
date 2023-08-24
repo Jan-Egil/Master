@@ -294,18 +294,12 @@ def substorm_extract_and_filter(df, substorm_csv_path):
 
     substorm_df.drop(labels=droplist, axis=0, inplace=True)
     substorm_df.reset_index(inplace=True)
-    substorm_df.drop(labels=['index'], axis=1, inplace=True)
+
 
     print("Removed substorms without feature data!")
-    print(substorm_df)
-    return substorm_df
 
-# 8th: Create dataframe with timestamp (in 5 minute iters), whether or not there will be an onset in the next 15 mins, and the reduced features in bins
+    print("Adjusting datetimes to 5min-bin-intervals..")
 
-def create_master_dataframe(df, substorm_df):
-    print("Creating the final master dataframe..")
-
-    df['substorm_onset'] = 0
     for i in tqdm(range(len(substorm_df.index))):
         substorm_onset_time = substorm_df['Date_UTC'][i]
         year = int(substorm_onset_time[0:4])
@@ -320,8 +314,25 @@ def create_master_dataframe(df, substorm_df):
                                                 hour=hour,
                                                 minute=minute,
                                                 second=second)
-        for j in range(15):
+        substorm_df['Date_UTC'][i] = substorm_onset_time_datetime
+
+    substorm_df.drop(labels=['index'], axis=1, inplace=True)
+    print("Finished adjusting datetimes in dataframe!")
+
+    print(substorm_df)
+    return substorm_df
+
+# 8th: Create dataframe with timestamp (in 5 minute iters), whether or not there will be an onset in the next 15 mins, and the reduced features in bins
+
+def create_master_dataframe(df, substorm_df):
+    print("Creating the final master dataframe..")
+
+    df['substorm_onset'] = 0
+    for i in tqdm(range(len(substorm_df.index))):
+        substorm_onset_time_datetime = substorm_df['Date_UTC'][i]
+        for j in range(31):
             checktime = substorm_onset_time_datetime - timedelta(minutes=int(5*np.floor(j/5)))
+            print(checktime)
             idx = df.index[df['timestamp'] == checktime].tolist()[0]
             df.at[idx,'substorm_onset'] = 1
     
@@ -353,13 +364,15 @@ def make_trainable_column(master_df):
     for i in tqdm(range(len(master_df.index))):
         trigger = 0
         df_time = master_df['timestamp'][i]
+        print("------")
         for j in range(7):
             idx = i-j
             if idx <= 0:
                 trigger = 1
                 continue
-            checktime = df_time- timedelta(minutes=int(5*np.floor(j/5)))
+            checktime = df_time- timedelta(minutes=5*j)#int(5*np.floor(j/5)))
             df_time_prev = master_df['timestamp'][idx]
+            print(f"{checktime} -|-|-|-|- {df_time_prev}")
             if not checktime == df_time_prev:
                 trigger = 1
         if trigger == 0:
@@ -390,8 +403,8 @@ if __name__ == "__main__":
     #cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path = define_paths()
     
     # Step 1: Take features, reduce features, save to file
-    #y_or_n = input("Do you want to reduce the features? [Y/n] ")
-    y_or_n = "y"
+    y_or_n = input("Do you want to reduce the features? [Y/n] ")
+    #y_or_n = "y"
 
     if y_or_n == "Y" or y_or_n == "y":
         df = fetch_initial_data(save_path)
@@ -409,8 +422,8 @@ if __name__ == "__main__":
         del new_df, df
 
     # Step 2: Take reduced features, bin together, save to file.
-    #y_or_n = input("Do you want to bin the features? [Y/n] ")
-    y_or_n = "y"
+    y_or_n = input("Do you want to bin the features? [Y/n] ")
+    #y_or_n = "y"
 
     if y_or_n == "Y" or y_or_n == "y":
         df = extract_reduced_from_file(save_path_reduced)
@@ -422,8 +435,8 @@ if __name__ == "__main__":
         del df, new_df
     
     # Step 3: Take binned features and substorm data, and create master dataframe
-    #y_or_n = input("Do you want to create the master dataframe? [Y/n] ")
-    y_or_n = "y"
+    y_or_n = input("Do you want to create the master dataframe? [Y/n] ")
+    #y_or_n = "y"
 
     if y_or_n == "Y" or y_or_n == "y":
         df = fetch_binned_from_file(save_path_binned)
@@ -438,8 +451,8 @@ if __name__ == "__main__":
     
 
     # Step 4: Take master dataframe, make trainable-column, insert and save
-    #y_or_n = input("Do you want to create the master dataframe w/ trainable column? [Y/n] ")
-    y_or_n = "y"
+    y_or_n = input("Do you want to create the master dataframe w/ trainable column? [Y/n] ")
+    #y_or_n = "y"
 
     if y_or_n == "Y" or y_or_n == "y":
         master_df = fetch_master_dataframe(master_df_path)
