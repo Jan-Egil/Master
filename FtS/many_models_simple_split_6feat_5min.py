@@ -25,7 +25,7 @@ if 0 == 1:
 if platform == "win32":
     master_df_path = "master_trainable_fsim.h5"
 else:
-    master_df_path = "/scratch/feats_FtS/master_df/master_trainable_fsim_4feat.h5"
+    master_df_path = "/scratch/feats_FtS/master_df/master_trainable_fsim_6feat_5min.h5"
 master_df = pd.read_hdf(master_df_path, key=f"final_feats")
 master_df.sort_values(by='timestamp', inplace=True, ignore_index=True)
 
@@ -102,15 +102,15 @@ for idxs_train, idxs_test in kfold.split(array_feats):
     num_imgs_train = len(train_idxs_filtered)
     num_imgs_test = len(test_idxs_filtered)
 
-    X_train = np.zeros((num_imgs_train, num_feats*30))
-    X_test = np.zeros((num_imgs_test, num_feats*30))
+    X_train = np.zeros((num_imgs_train, num_feats*8))
+    X_test = np.zeros((num_imgs_test, num_feats*8))
     Y_train = substorm_onset[train_idxs_filtered]
     Y_test = substorm_onset[test_idxs_filtered]
 
     for i, train_idx in enumerate(train_idxs_filtered):
-        X_train[i] = array_feats[train_idx-29:train_idx+1].flatten()
+        X_train[i] = array_feats[train_idx-7:train_idx+1].flatten()
     for j, test_idx in enumerate(test_idxs_filtered):
-        X_test[j] = array_feats[test_idx-29:test_idx+1].flatten()
+        X_test[j] = array_feats[test_idx-7:test_idx+1].flatten()
 
 
     print("Started classifying")
