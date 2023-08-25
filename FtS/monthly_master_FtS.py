@@ -32,10 +32,10 @@ minbin = 5 #1 for 1min-bins, 5 for 5min-bins
 
 # The models (uncomment the one to try out)
 
-model = RidgeClassifier(class_weight='balanced')       # Wait
-#model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
+#model = RidgeClassifier(class_weight='balanced')       # Wait
+model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
 #model = SVC(class_weight='balanced')                   # Wait
-#model = SVC(class_weight='balanced', kernel="linear", max_iter=400)   # Wait
+#model = SVC(class_weight='balanced', kernel="linear", max_iter=1000)   # Wait
 #model = GaussianNB()                                   # Wait
 #model = MLPClassifier()                                # Wait
 #model = KNeighborsClassifier()                         # Wait
@@ -177,7 +177,7 @@ for month_to_train in months_to_train:
     predicting_time_list.append(predicting_time)
     total_time_list.append(total_time)
 
-print(f"Number of feats: {numfeats} \nBinning interval: {minbin}-minute bins\nMonthly split.\n")
+print(f"Number of feats: {numfeats} \nBinning interval: {minbin}-minute bins\nMonthly split\n")
 print(f"training score: {np.mean(train_score_list)} ± {np.std(train_score_list)}")
 print(f"test score: {np.mean(test_score_list)} ± {np.std(test_score_list)}")
 print(f"Recall score: {np.mean(recall_list)} ± {np.std(recall_list)}")

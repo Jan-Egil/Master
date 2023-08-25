@@ -25,16 +25,18 @@ if 0 == 1:
 ----------------------------------
 """
 
-numfeats = 35 #4, 6 and 35 exists
+numfeats = 4 #4, 6 and 35 exists
 minbin = 1 #1 for 1min-bins, 5 for 5min-bins
+wegonshuffle = True
 
 k = 5
-kfold = KFold(n_splits=k, shuffle=True)
+kfold = KFold(n_splits=k, shuffle=wegonshuffle)
 
 # The models (uncomment the one to try out)
 model = RidgeClassifier(class_weight='balanced')       # Decently bad, but fast
 #model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
 #model = SVC(class_weight='balanced')                   # Wait
+#model = SVC(class_weight='balanced', kernel="linear")#, max_iter=1000)   # Wait
 #model = GaussianNB()                                   # Wait
 #model = MLPClassifier()                                # Wait
 #model = KNeighborsClassifier()                         # Wait
@@ -152,7 +154,7 @@ for idxs_train, idxs_test in kfold.split(array_feats):
 
 
     balanced_acc = balanced_accuracy_score(Y_test, Y_pred)
-    print(f"Balanced accuracy: {balanced_acc}\n")
+    print(f"Balanced accuracy: {balanced_acc*100}\n")
 
     tn, fp, fn, tp = confusion_matrix(Y_test, Y_pred).ravel()
     model_fpr = fp/(fp+tn)
