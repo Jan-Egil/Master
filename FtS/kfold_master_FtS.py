@@ -174,7 +174,12 @@ for idxs_train, idxs_test in kfold.split(array_feats):
 
 print("------------------------------\n\n")
 
-print(f"Number of feats: {numfeats} \nBinning interval: {minbin}-minute bins\nK-fold split (k={k})\n")
+print(f"Number of feats: {numfeats} \nBinning interval: {minbin}-minute bins\nK-fold split (k={k})")
+if wegonshuffle:
+    print(f"Shuffled k-fold\n")
+else:
+    print(f"Ordered k-fold")
+
 print(f"training score: {np.mean(train_score_list)} ± {np.std(train_score_list)}")
 print(f"test score: {np.mean(test_score_list)} ± {np.std(test_score_list)}")
 print(f"Recall score: {np.mean(recall_list)} ± {np.std(recall_list)}")
