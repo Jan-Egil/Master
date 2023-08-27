@@ -5,7 +5,7 @@ from tqdm import tqdm
 from sys import platform, exit
 from time import perf_counter
 
-from sklearn.linear_model import RidgeClassifier
+from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
@@ -27,22 +27,22 @@ if 0 == 1:
 
 numfeats = 4 #4, 6 and 35 exists
 minbin = 1 #1 for 1min-bins, 5 for 5min-bins
-wegonshuffle = True
+wegonshuffle = False
 
 k = 5
 kfold = KFold(n_splits=k, shuffle=wegonshuffle)
 
 # The models (uncomment the one to try out)
-model = RidgeClassifier(class_weight='balanced')       # Decently bad, but fast
+#model = RidgeClassifier(class_weight='balanced')       # Decently bad, but fast
 #model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
-#model = SVC(class_weight='balanced')                   # Wait
-#model = SVC(class_weight='balanced', kernel="linear")#, max_iter=1000)   # Wait
+model = SVC(class_weight='balanced')                   # Wait
+#model = SVC(class_weight='balanced', kernel="linear", max_iter=1000)   # Wait
 #model = GaussianNB()                                   # Wait
 #model = MLPClassifier()                                # Wait
 #model = KNeighborsClassifier()                         # Wait
 #model = AdaBoostClassifier()                           # Shit and slow
 #model = RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1, class_weight='balanced') # Wait
-
+#model = LogisticRegression(class_weight='balanced')
 
 """
 ---------------------------------

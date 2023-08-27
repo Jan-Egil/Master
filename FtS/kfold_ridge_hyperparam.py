@@ -22,7 +22,7 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score, acc
 """
 
 numfeats = 6 #4, 6 and 35 exists
-minbin = 5 #1 for 1min-bins, 5 for 5min-bins
+minbin = 1 #1 for 1min-bins, 5 for 5min-bins
 wegonshuffle = False
 
 k = 5

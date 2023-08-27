@@ -30,7 +30,7 @@ ax_recall.set_xscale('log')
 ax_balaccs.errorbar(alphas, balaccs)
 ax_balaccs.set_xlabel('Hyperparameter Alpha')
 ax_balaccs.set_ylabel('Balanced Accuracy')
-ax_balaccs.set_title('Balanced Accuracy')
+ax_balaccs.set_title('RBalanced Accuracy')
 ax_balaccs.set_xscale('log')
 
 ax_falsepos.errorbar(alphas, falsepos)
