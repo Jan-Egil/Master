@@ -387,7 +387,6 @@ if __name__ == "__main__":
     substorm_csv_path = paths[4]
     master_df_path = paths[5]
     master_df_trainable_path = paths[6]
-    #cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path = define_paths()
     
     # Step 1: Take features, reduce features, save to file
     y_or_n = input("Do you want to reduce the features? [Y/n] ")
