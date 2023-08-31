@@ -389,7 +389,7 @@ if __name__ == "__main__":
     master_df_trainable_path = paths[6]
     
     # Step 1: Take features, reduce features, save to file
-    y_or_n = input("Do you want to reduce the features? [Y/n] ")
+    y_or_n = "y"#input("Do you want to reduce the features? [Y/n] ")
 
     if y_or_n == "Y" or y_or_n == "y":
         df = fetch_initial_data(save_path)
@@ -407,7 +407,7 @@ if __name__ == "__main__":
         del new_df, df
 
     # Step 2: Take reduced features, bin together, save to file.
-    y_or_n = input("Do you want to bin the features? [Y/n] ")
+    y_or_n = "y"#input("Do you want to bin the features? [Y/n] ")
 
     if y_or_n == "Y" or y_or_n == "y":
         df = extract_reduced_from_file(save_path_reduced)
@@ -419,7 +419,7 @@ if __name__ == "__main__":
         del df, new_df
     
     # Step 3: Take binned features and substorm data, and create master dataframe
-    y_or_n = input("Do you want to create the master dataframe? [Y/n] ")
+    y_or_n = "y"#input("Do you want to create the master dataframe? [Y/n] ")
     if y_or_n == "Y" or y_or_n == "y":
         df = fetch_binned_from_file(save_path_binned)
 
@@ -433,7 +433,7 @@ if __name__ == "__main__":
     
 
     # Step 4: Take master dataframe, make trainable-column, insert and save
-    y_or_n = input("Do you want to create the master dataframe w/ trainable column? [Y/n] ")
+    y_or_n = "y"#input("Do you want to create the master dataframe w/ trainable column? [Y/n] ")
     if y_or_n == "Y" or y_or_n == "y":
         master_df = fetch_master_dataframe(master_df_path)
 

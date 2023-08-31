@@ -5,7 +5,7 @@ from tqdm import tqdm
 from sys import platform, exit
 from time import perf_counter
 
-from sklearn.linear_model import RidgeClassifier
+from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
@@ -85,7 +85,7 @@ timestamps = np.array(timestamps_list)
 #indices = np.arange(n_samples)
 #idxs_train, idxs_test = train_test_split(indices, test_size=0.2)
 
-alphas = np.logspace(-2,8,100)
+alphas = np.logspace(-8,-2,1000)
 
 recalls = np.zeros_like(alphas)
 recalls_std = np.zeros_like(alphas)
@@ -97,7 +97,7 @@ falsepos = np.zeros_like(alphas)
 falsepos_std = np.zeros_like(alphas)
 
 for alphaidx, alpha in enumerate(tqdm(alphas)):
-    model = RidgeClassifier(alpha=alpha, class_weight='balanced') 
+    model = LogisticRegression(class_weight='balanced', C=alpha) 
     for idxs_train, idxs_test in kfold.split(array_feats):
         train_idxs_filtered = []
         test_idxs_filtered = []
@@ -121,9 +121,6 @@ for alphaidx, alpha in enumerate(tqdm(alphas)):
         for j, test_idx in enumerate(test_idxs_filtered):
             X_test[j] = array_feats[test_idx-7:test_idx+1].flatten()
 
-        scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
 
         #print("Started classifying")
 

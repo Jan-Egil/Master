@@ -13,7 +13,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
-
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, accuracy_score, balanced_accuracy_score
 
@@ -25,7 +25,7 @@ if 0 == 1:
 ----------------------------------
 """
 
-numfeats = 4 #4, 6 and 35 exists
+numfeats = 35 #4, 6 and 35 exists
 minbin = 1 #1 for 1min-bins, 5 for 5min-bins
 wegonshuffle = False
 
@@ -33,9 +33,9 @@ k = 5
 kfold = KFold(n_splits=k, shuffle=wegonshuffle)
 
 # The models (uncomment the one to try out)
-#model = RidgeClassifier(class_weight='balanced')       # Decently bad, but fast
+model = RidgeClassifier(class_weight='balanced')       # Decently bad, but fast
 #model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
-model = SVC(class_weight='balanced')                   # Wait
+#model = SVC(class_weight='balanced')                   # Wait
 #model = SVC(class_weight='balanced', kernel="linear", max_iter=1000)   # Wait
 #model = GaussianNB()                                   # Wait
 #model = MLPClassifier()                                # Wait
@@ -129,6 +129,10 @@ for idxs_train, idxs_test in kfold.split(array_feats):
     for j, test_idx in enumerate(test_idxs_filtered):
         X_test[j] = array_feats[test_idx-7:test_idx+1].flatten()
 
+
+    # scaler = StandardScaler()
+    # X_train = scaler.fit_transform(X_train)
+    # X_test = scaler.transform(X_test)
 
     print("Started classifying")
 
