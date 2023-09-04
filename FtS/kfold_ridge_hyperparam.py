@@ -13,7 +13,6 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, accuracy_score, balanced_accuracy_score
 
@@ -120,10 +119,6 @@ for alphaidx, alpha in enumerate(tqdm(alphas)):
             X_train[i] = array_feats[train_idx-7:train_idx+1].flatten()
         for j, test_idx in enumerate(test_idxs_filtered):
             X_test[j] = array_feats[test_idx-7:test_idx+1].flatten()
-
-        scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
 
         #print("Started classifying")
 
