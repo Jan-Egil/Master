@@ -84,7 +84,7 @@ def scale_and_cluster(array_feats):
     print("Scaling done!\n")
 
     print("clustering and labeling each picture..")
-    n_reduced = 4
+    n_reduced = 35
     reducer = KMeans(n_clusters=n_reduced, n_init='auto')
     array_feats = reducer.fit_transform(array_feats)
     print("Reduction done!\n")
