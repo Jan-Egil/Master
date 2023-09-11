@@ -245,10 +245,10 @@ def substorm_extract_and_filter(df, substorm_csv_path):
     lat_fsim = 61.76
     lon_fsim = 238.77
 
-    min_lat_fsim = lat_fsim-15
-    max_lat_fsim = lat_fsim+15
-    min_lon_fsim = lon_fsim-15
-    max_lon_fsim = lon_fsim+15
+    min_lat_fsim = lat_fsim-10
+    max_lat_fsim = lat_fsim+10
+    min_lon_fsim = lon_fsim-10
+    max_lon_fsim = lon_fsim+10
 
 
 

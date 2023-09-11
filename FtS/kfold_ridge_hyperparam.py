@@ -22,6 +22,7 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score, acc
 
 numfeats = 35 #4, 6 and 35 exists
 minbin = 1 #1 for 1min-bins, 5 for 5min-bins
+lon_lat_sep = 10 #10 and 15 exists
 wegonshuffle = False
 
 k = 5
@@ -36,11 +37,18 @@ if not numfeats in {4,6,35}:
     exit(f"\nWoops, {numfeats} number of features does not exist!\n")
 if not minbin in {1,5}:
     exit(f"\nWoops, {minbin} binning interval does not exist!\n")
+if not lon_lat_sep in {10,15}:
+    exit(f"\nWoops, {lon_lat_sep} degrees separation in coordinates does not exist!\n")
 
 if platform == "win32":
     master_df_path = f"master_trainable_fsim_{numfeats}feat"
 else:
     master_df_path = f"/scratch/feats_FtS/master_df/master_trainable_fsim_{numfeats}feat"
+
+if lon_lat_sep == 10:
+    master_df_path += "_10deg"
+elif lon_lat_sep == 15:
+    pass
 
 if minbin == 1:
     master_df_path += ".h5"
@@ -84,7 +92,7 @@ timestamps = np.array(timestamps_list)
 #indices = np.arange(n_samples)
 #idxs_train, idxs_test = train_test_split(indices, test_size=0.2)
 
-alphas = np.logspace(-2,8,100)
+alphas = np.logspace(-8,8,200)
 
 recalls = np.zeros_like(alphas)
 recalls_std = np.zeros_like(alphas)
