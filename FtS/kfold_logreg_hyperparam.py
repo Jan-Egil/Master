@@ -23,6 +23,7 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score, acc
 
 numfeats = 35 #4, 6 and 35 exists
 minbin = 1 #1 for 1min-bins, 5 for 5min-bins
+lon_lat_sep = 10 #10 and 15 exists
 wegonshuffle = False
 
 k = 5
@@ -42,6 +43,11 @@ if platform == "win32":
     master_df_path = f"master_trainable_fsim_{numfeats}feat"
 else:
     master_df_path = f"/scratch/feats_FtS/master_df/master_trainable_fsim_{numfeats}feat"
+
+if lon_lat_sep == 10:
+    master_df_path += "_10deg"
+elif lon_lat_sep == 15:
+    pass
 
 if minbin == 1:
     master_df_path += ".h5"
