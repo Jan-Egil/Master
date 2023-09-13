@@ -1,6 +1,12 @@
+import os
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import requests
+from PIL import Image
+
+os.environ["CDF_LIB"] = "/uio/hume/student-u58/janeod/Downloads/cdf39_0-dist-all/cdf39_0-dist/lib"
+from spacepy import pycdf
 
 # First find which images are the closest to k-means-point.
 # Then extract datetime
@@ -48,9 +54,64 @@ np.save('best_idx_array.npy', best_idx_array)
 best_dist_array = np.load('best_dist_array.npy')
 best_idx_array = np.load('best_idx_array.npy')
 
-print(best_dist_array)
-print(best_idx_array)
-print(best_idx_array.shape)
+cdf_path = 'temp.cdf'
+key_img = f"thg_asf_fsim"
+
 n_labels = best_idx_array.shape[0]
 n_best = best_idx_array.shape[1]
 
+for label_num in range(n_labels):
+    labelarray_idxs = best_idx_array[label_num]
+    for rank in range(n_best):
+        idx = labelarray_idxs[rank]
+        rel_datetime = df['timestamp'][idx]
+        year = rel_datetime.year
+        month = rel_datetime.month
+        day = rel_datetime.day
+        hour = rel_datetime.hour
+        hour_str = str(rel_datetime.hour).zfill(2)
+        minute = rel_datetime.minute
+        second = rel_datetime.second
+
+        
+        cdf_url = f"http://themis.ssl.berkeley.edu/data/themis/thg/l1/asi/fsim/{year}/{month}/thg_l1_asf_fsim_{year}{month}{day}{hour_str}_v01.cdf"
+        r = requests.get(cdf_url)
+        a = open(cdf_path, 'wb')
+        a.write(r.content)
+        a.close()
+        
+
+        cdf = pycdf.CDF("temp.cdf")
+        num_imgs = cdf[key_img].shape[0]
+
+        for i in range(num_imgs):
+            img_datetime = cdf[f'{key_img}_epoch'][i]
+            #print(img_datetime)
+            if img_datetime != rel_datetime:
+                continue
+
+            img_array = cdf[key_img][i]
+            crop_percent = 12
+            num_pixels = int(img_array.shape[0]*(crop_percent/100))
+            temp_img = Image.fromarray(img_array)
+            (left, upper, right, lower) = (num_pixels, num_pixels, img_array.shape[0]-num_pixels, img_array.shape[0]-num_pixels)
+            temp_img2 = temp_img.crop((left, upper, right, lower))
+            img_array = np.asarray(temp_img2)
+
+            # Rescale to range [0,1]
+            # First subtract 1st percentile
+            percentile1 = np.percentile(img_array, 1)
+            img_array = img_array - percentile1
+
+            # Then divide by 99th percentile
+            percentile99 = np.percentile(img_array, 99)
+            img_array = img_array/percentile99
+
+            # Then set everything under 0 to 0, and everything over 1 to 1
+            img_array[img_array > 1] = 1
+            img_array[img_array < 0] = 0
+            
+            img = Image.fromarray(img_array*255)
+            img = img.resize((224,224))
+            img = img.convert("RGB")
+            img.save(f'label_{label_num}_rank_{rank}.png')

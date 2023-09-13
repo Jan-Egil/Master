@@ -136,7 +136,7 @@ for iter_num, url in enumerate(tqdm(urls)):
         img_array[img_array < 0] = 0
 
         # Make array into PIL-image
-        img = Image.fromarray(img_array*255)
+        img = Image.fromarray(img_array)
         img = img.resize((224,224))
         img = img.convert("RGB")
 
