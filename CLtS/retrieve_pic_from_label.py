@@ -60,21 +60,18 @@ key_img = f"thg_asf_fsim"
 n_labels = best_idx_array.shape[0]
 n_best = best_idx_array.shape[1]
 
-for label_num in range(n_labels):
+for label_num in tqdm(range(n_labels)):
     labelarray_idxs = best_idx_array[label_num]
-    for rank in range(n_best):
+    for rank in tqdm(range(n_best)):
         idx = labelarray_idxs[rank]
         rel_datetime = df['timestamp'][idx]
         year = rel_datetime.year
-        month = rel_datetime.month
-        day = rel_datetime.day
-        hour = rel_datetime.hour
-        hour_str = str(rel_datetime.hour).zfill(2)
-        minute = rel_datetime.minute
-        second = rel_datetime.second
+        month = str(rel_datetime.month).zfill(2)
+        day = str(rel_datetime.day).zfill(2)
+        hour = str(rel_datetime.hour).zfill(2)
 
-        
-        cdf_url = f"http://themis.ssl.berkeley.edu/data/themis/thg/l1/asi/fsim/{year}/{month}/thg_l1_asf_fsim_{year}{month}{day}{hour_str}_v01.cdf"
+        print(f"day: {day},")
+        cdf_url = f"http://themis.ssl.berkeley.edu/data/themis/thg/l1/asi/fsim/{year}/{month}/thg_l1_asf_fsim_{year}{month}{day}{hour}_v01.cdf"
         r = requests.get(cdf_url)
         a = open(cdf_path, 'wb')
         a.write(r.content)
@@ -115,3 +112,7 @@ for label_num in range(n_labels):
             img = img.resize((224,224))
             img = img.convert("RGB")
             img.save(f'label_{label_num}_rank_{rank}.png')
+        cdf.close()
+        os.remove("temp.cdf")
+
+print("Script finished!")
