@@ -20,7 +20,7 @@ n_pic_per_label = 3
 n_labels = len(df['feat_reduced'][0])
 n_imgs = len(df.index)
 
-"""
+
 best_dist_list_full = []
 best_idx_list_full = []
 
@@ -47,12 +47,12 @@ for label in tqdm(range(n_labels)):
 best_dist_array = np.array(best_dist_list_full)
 best_idx_array = np.array(best_idx_list_full)
 
-np.save('best_dist_array.npy', best_dist_array)
-np.save('best_idx_array.npy', best_idx_array)
-"""
+#np.save('best_dist_array.npy', best_dist_array)
+#np.save('best_idx_array.npy', best_idx_array)
 
-best_dist_array = np.load('best_dist_array.npy')
-best_idx_array = np.load('best_idx_array.npy')
+
+#best_dist_array = np.load('best_dist_array.npy')
+#best_idx_array = np.load('best_idx_array.npy')
 
 cdf_path = 'temp.cdf'
 key_img = f"thg_asf_fsim"
