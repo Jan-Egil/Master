@@ -388,7 +388,7 @@ if __name__ == "__main__":
         del new_df, df
     
     # Step 2: Take image labels, bin together, save to file
-    #y_or_n = input("Do you want to bin the image labels? [Y/n] ")
+    y_or_n = input("Do you want to bin the image labels? [Y/n] ")
     if y_or_n == "Y" or y_or_n == "y":
         df = extract_reduced_from_file(save_path_reduced)
 
@@ -399,7 +399,7 @@ if __name__ == "__main__":
         del df, new_df
     
     
-    #y_or_n = input("Do you want to create the master dataframe w/ substorms? [Y/n] ")
+    y_or_n = input("Do you want to create the master dataframe w/ substorms? [Y/n] ")
     if y_or_n == "Y" or y_or_n == "y":
         df = fetch_binned_from_file(save_path_binned)
 
@@ -412,7 +412,7 @@ if __name__ == "__main__":
         del master_df
     
 
-    #y_or_n = input("Do you want to expand the master dataframe w/ trainable column? [Y/n] ")
+    y_or_n = input("Do you want to expand the master dataframe w/ trainable column? [Y/n] ")
     if y_or_n == "Y" or y_or_n == "y":
         master_df = fetch_master_dataframe(master_df_path)
 
