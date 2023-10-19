@@ -6,14 +6,13 @@ from sys import platform, argv
 from datetime import datetime, timedelta
 
 from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-
+from sklearn.cluster import KMeans
 
 def define_paths():
     if platform == 'win32':
         cdfpath = "N/A"
         save_path = "N/A"
-        save_path_reduced = "reduced_feats.h5"
+        save_path_reduced = "clustered_feats.h5"
         save_path_binned = "binned_feats.h5"
         substorm_csv_path = "substorms.csv"
         master_df_path = "master_fsim.h5"
@@ -24,13 +23,12 @@ def define_paths():
         full_path = curr_path+temp_dir
         cdfpath = full_path + "/temp.cdf"
         save_path = "/scratch/feats_FtS/extracted_feats/"
-        save_path_reduced = "/scratch/feats_FtS/reduced_feats/reduced_feats.h5"
-        save_path_binned = "/scratch/feats_FtS/binned_feats/binned_feats.h5"
+        save_path_reduced = "/scratch/feats_ULtS/reduced_feats/clustered_feats.h5"
+        save_path_binned = "/scratch/feats_ULtS/binned_feats/binned_feats.h5"
         substorm_csv_path = "/scratch/substorms/substorms_forsyth.csv"
-        master_df_path = "/scratch/feats_FtS/master_df/master_fsim.h5"
-        master_df_trainable_path = "/scratch/feats_FtS/master_df/master_trainable_fsim.h5"
+        master_df_path = "/scratch/feats_ULtS/master_df/master_fsim.h5"
+        master_df_trainable_path = "/scratch/feats_ULtS/master_df/master_trainable_fsim.h5"
     return cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path, master_df_trainable_path
-    
 
 def fetch_initial_data(save_path):
     if platform == 'win32':
@@ -79,28 +77,22 @@ def separate_dataframe_contents(df):
     print("Extraction from dataframe done!\n")
     return array_feats, timestamps, loc
 
-# 2nd: Apply scaling and PCA to reduce said dimensions. (35 dims is a nice start)
-# HEADS UP! One should maybe train-test-split first before scaling and reducing to be statistically correct.
-# This is sort of cheating. Should look closer into this.
-
-def scale_and_reduce(array_feats):
+def scale_and_cluster(array_feats):
     print("Scaling the data..")
     sc = StandardScaler()
     array_feats = sc.fit_transform(array_feats)
     print("Scaling done!\n")
 
-    print("Reducing dimensionality of data..")
-    n_reduced = 4
-    reducer = PCA(n_components=n_reduced)
-    array_feats = reducer.fit_transform(array_feats)
+    print("clustering and labeling each picture..")
+    n_reduced = 6
+    reducer = KMeans(n_clusters=n_reduced, n_init='auto')
+    array_feats = reducer.fit_predict(array_feats)
     print("Reduction done!\n")
 
     return array_feats 
 
-# 3rd: Connect the right features with the right locatons and timestamps in a new dataframe
-
 def connect_reduced_with_timestamps_loc(array_feats, timestamps, loc):
-    print("Placing reduced features, timestamps and location in new dataframe..")
+    print("Placing labeled features, timestamps and location in new dataframe..")
     dict = {"feat_reduced": list(array_feats),
             "timestamp": timestamps,
             "loc": loc}
@@ -108,14 +100,10 @@ def connect_reduced_with_timestamps_loc(array_feats, timestamps, loc):
     print("Finished placing features in new dataframe!\n")
     return new_df
 
-# 4th: Save dataframe to file. Delete variable
-# Tip: Try to plot features against timestamps. See if you find some structure in the madness
 def save_reduced_to_file(new_df, save_path_reduced):
     print("Placing dataframe in hdf-file..")
     new_df.to_hdf(save_path_reduced, key=f'reduced_feats', mode='w')
     print("Finished placing dataframe in hdf-file!\n")
-
-# 5th: Extract dataframe from file. Also sort it in date-order
 
 def extract_reduced_from_file(save_path_reduced):
     print("Extracting reduced features from file..")
@@ -126,8 +114,6 @@ def extract_reduced_from_file(save_path_reduced):
 
     print("File extraction complete!\n")
     return df
-
-# 6th: Combine the features into bins of 1 minutes each. (Average of each feature on their own)
 
 def feature_binning(df):
     print("Started binning together features in same minute..")
@@ -217,13 +203,10 @@ def feature_binning(df):
     print("Finished binning features together!\n")
     return new_df
 
-# 7th: Save binned data to file
 def save_binned_to_file(new_df, save_path_binned):
     print("Saving binned features to file..")
     new_df.to_hdf(save_path_binned, key=f"binned_feats", mode='w')
     print("Done saving binned to file!\n")
-
-# 8th: Extract binned data from file
 
 def fetch_binned_from_file(save_path_binned):
     print("Started extraction of binned feature data..")
@@ -235,9 +218,6 @@ def fetch_binned_from_file(save_path_binned):
     print("Finished extracting binned feature data!\n")
     return df
 
-# 7th: Use location and timestamp-data together with onset-data to determine whether or not there has been an onset.
-
-# Read substorm files
 def substorm_extract_and_filter(df, substorm_csv_path):
     substorm_df = pd.read_csv(substorm_csv_path)
 
@@ -300,8 +280,6 @@ def substorm_extract_and_filter(df, substorm_csv_path):
     print(substorm_df)
     return substorm_df
 
-# 8th: Create dataframe with timestamp (in 1 minute iters), whether or not there will be an onset in the next 15 mins, and the reduced features in bins
-
 def create_master_dataframe(df, substorm_df):
     print("Creating the final master dataframe..")
 
@@ -328,8 +306,6 @@ def create_master_dataframe(df, substorm_df):
     print("Finished creating the final master dataframe!\n")
     print(df)
     return df
-
-# 9th: Save dataframe to file. Delete variabele.
 
 def save_master_dataframe(master_df, master_df_path):
     print("Saving master dataframe to file..")
@@ -387,16 +363,16 @@ if __name__ == "__main__":
     substorm_csv_path = paths[4]
     master_df_path = paths[5]
     master_df_trainable_path = paths[6]
-    
-    # Step 1: Take features, reduce features, save to file
-    y_or_n = input("Do you want to reduce the features? [Y/n] ")
+
+    # Step 1: Take features, cluster and label them, save to file
+    y_or_n = input("Do you want to cluster the features? [Y/n] ")
 
     if y_or_n == "Y" or y_or_n == "y":
         df = fetch_initial_data(save_path)
 
         array_feats, timestamps, loc = separate_dataframe_contents(df)
 
-        array_feats = scale_and_reduce(array_feats)
+        array_feats = scale_and_cluster(array_feats)
 
         new_df = connect_reduced_with_timestamps_loc(array_feats, timestamps, loc)
 
@@ -405,10 +381,9 @@ if __name__ == "__main__":
         save_reduced_to_file(new_df, save_path_reduced)
 
         del new_df, df
-
-    # Step 2: Take reduced features, bin together, save to file.
-    y_or_n = input("Do you want to bin the features? [Y/n] ")
-
+    
+    # Step 2: Take image labels, bin together, save to file
+    y_or_n = input("Do you want to bin the image labels? [Y/n] ")
     if y_or_n == "Y" or y_or_n == "y":
         df = extract_reduced_from_file(save_path_reduced)
 
@@ -418,8 +393,8 @@ if __name__ == "__main__":
 
         del df, new_df
     
-    # Step 3: Take binned features and substorm data, and create master dataframe
-    y_or_n = input("Do you want to create the master dataframe? [Y/n] ")
+    
+    y_or_n = input("Do you want to create the master dataframe w/ substorms? [Y/n] ")
     if y_or_n == "Y" or y_or_n == "y":
         df = fetch_binned_from_file(save_path_binned)
 
@@ -432,8 +407,7 @@ if __name__ == "__main__":
         del master_df
     
 
-    # Step 4: Take master dataframe, make trainable-column, insert and save
-    y_or_n = input("Do you want to create the master dataframe w/ trainable column? [Y/n] ")
+    y_or_n = input("Do you want to expand the master dataframe w/ trainable column? [Y/n] ")
     if y_or_n == "Y" or y_or_n == "y":
         master_df = fetch_master_dataframe(master_df_path)
 
@@ -441,4 +415,3 @@ if __name__ == "__main__":
 
         save_trainable_master_df(master_trainable_df, master_df_trainable_path)
 
-    
