@@ -23,11 +23,11 @@ def define_paths():
         full_path = curr_path+temp_dir
         cdfpath = full_path + "/temp.cdf"
         save_path = "/scratch/feats_FtS/extracted_feats/"
-        save_path_reduced = "/scratch/feats_CLtS/reduced_feats/clustered_feats.h5"
-        save_path_binned = "/scratch/feats_CLtS/binned_feats/binned_feats.h5"
+        save_path_reduced = "/scratch/feats_ULtS/reduced_feats/clustered_feats.h5"
+        save_path_binned = "/scratch/feats_ULtS/binned_feats/binned_feats.h5"
         substorm_csv_path = "/scratch/substorms/substorms_forsyth.csv"
-        master_df_path = "/scratch/feats_CLtS/master_df/master_fsim.h5"
-        master_df_trainable_path = "/scratch/feats_CLtS/master_df/master_trainable_fsim.h5"
+        master_df_path = "/scratch/feats_ULtS/master_df/master_fsim.h5"
+        master_df_trainable_path = "/scratch/feats_ULtS/master_df/master_trainable_fsim.h5"
     return cdfpath, save_path, save_path_reduced, save_path_binned, substorm_csv_path, master_df_path, master_df_trainable_path
 
 def fetch_initial_data(save_path):
@@ -84,15 +84,10 @@ def scale_and_cluster(array_feats):
     print("Scaling done!\n")
 
     print("clustering and labeling each picture..")
-    n_reduced = 35
+    n_reduced = 6
     reducer = KMeans(n_clusters=n_reduced, n_init='auto')
-    array_feats = reducer.fit_transform(array_feats)
+    array_feats = reducer.fit_predict(array_feats)
     print("Reduction done!\n")
-
-    print("Normalizing the array")
-    array_feats_norm = np.linalg.norm(array_feats, axis=1)
-    array_feats = ((array_feats.T/array_feats_norm).T)**2
-    print("Normalization done!")
 
     return array_feats 
 
@@ -123,12 +118,11 @@ def extract_reduced_from_file(save_path_reduced):
 def feature_binning(df):
     print("Started binning together features in 5 minute intervals..")
     new_df = pd.DataFrame(columns=['averaged_feats', 'timestamp', 'loc'])
-
+    num_elems = len(set(np.array(df['feat_reduced'])))
     num_points = len(df.index)
     num_in_minute = 0
     set_minute = 5*np.floor(df['timestamp'][0].minute/5)
     set_hour = df['timestamp'][0].hour
-    num_reduced_feats = len(df['feat_reduced'][0])
 
     for i in tqdm(range(num_points)):
         timestamp = df['timestamp'][i]
@@ -142,15 +136,12 @@ def feature_binning(df):
         if i == num_points-1:
             relevant_df = df[['feat_reduced', 'timestamp', 'loc']][i-num_in_minute:i]
             relevant_df.reset_index(inplace=True)
+            counter_array = np.zeros(num_elems)
             num_points_in_relevant = len(relevant_df.index)
-            average_list = []
-            for feature_elem in range(num_reduced_feats):
-                average_val = 0
-                for elem_in_df in range(num_points_in_relevant):
-                    feature_value = relevant_df['feat_reduced'][elem_in_df][feature_elem]
-                    average_val += feature_value
-                average_val = average_val/num_points_in_relevant
-                average_list.append(average_val)
+            for elem_in_df in range(num_points_in_relevant):
+                counteridx = int(relevant_df['feat_reduced'][elem_in_df])
+                counter_array[counteridx] += 1
+            counter_array = counter_array/num_points_in_relevant
 
             relevant_timestamp = relevant_df['timestamp'][0]
             new_timestamp = datetime(year=relevant_timestamp.year,
@@ -159,9 +150,11 @@ def feature_binning(df):
                                     hour=relevant_timestamp.hour,
                                     minute=relevant_timestamp.minute,
                                     second=0)
-            dict = {'averaged_feats': [np.array(average_list)],
+            
+            dict = {'averaged_feats': [counter_array],
                     'timestamp': new_timestamp,
                     'loc': relevant_df['loc'][0]}
+            
             new_df2 = pd.DataFrame(dict)
             new_df = pd.concat([new_df, new_df2], ignore_index=True)
             new_df.reset_index()
@@ -177,15 +170,12 @@ def feature_binning(df):
         else:
             relevant_df = df[['feat_reduced', 'timestamp', 'loc']][i-num_in_minute:i]
             relevant_df.reset_index(inplace=True)
+            counter_array = np.zeros(num_elems)
             num_points_in_relevant = len(relevant_df.index)
-            average_list = []
-            for feature_elem in range(num_reduced_feats):
-                average_val = 0
-                for elem_in_df in range(num_points_in_relevant):
-                    feature_value = relevant_df['feat_reduced'][elem_in_df][feature_elem]
-                    average_val += feature_value
-                average_val = average_val/num_points_in_relevant
-                average_list.append(average_val)
+            for elem_in_df in range(num_points_in_relevant):
+                counteridx = int(relevant_df['feat_reduced'][elem_in_df])
+                counter_array[counteridx] += 1
+            counter_array = counter_array/num_points_in_relevant
 
             relevant_timestamp = relevant_df['timestamp'][0]
             new_timestamp = datetime(year=relevant_timestamp.year,
@@ -195,7 +185,7 @@ def feature_binning(df):
                                     minute=relevant_timestamp.minute,
                                     second=0)
             
-            dict = {'averaged_feats': [np.array(average_list)],
+            dict = {'averaged_feats': [counter_array],
                     'timestamp': new_timestamp,
                     'loc': relevant_df['loc'][0]}
             
