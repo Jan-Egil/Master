@@ -147,7 +147,7 @@ def model_runner_logreg(num_feats, minbins, dataset, Cs):
         total_time[Cidx] = np.mean(total_time_list)
         total_time[Cidx] = np.std(total_time_list)
     
-    csv_path = f"Ridge_{dataset}_{minbins}bins_{num_feats}feats.csv"
+    csv_path = f"LogReg_{dataset}_{minbins}bins_{num_feats}feats.csv"
 
     df_to_file = pd.DataFrame(data={'Cs': Cs,
                                     'recall': recalls,
