@@ -34,9 +34,8 @@ def model_runner_ridge(num_feats, minbins, dataset, alphas):
     substorm_onset = np.zeros(num_imgs)
     trainable = np.zeros(num_imgs)
     timestamps_list = []
-    print(master_df.columns)
 
-    for i in tqdm(range(num_imgs)):
+    for i in range(num_imgs):
         array_feats[i] = master_df['averaged_feats'][i]
         substorm_onset[i] = master_df['substorm_onset'][i]
         trainable[i] = master_df['trainable'][i]
@@ -147,12 +146,34 @@ def model_runner_ridge(num_feats, minbins, dataset, alphas):
 
         total_time[alphaidx] = np.mean(total_time_list)
         total_time[alphaidx] = np.std(total_time_list)
+    
+    csv_path = f"Ridge_{dataset}_{minbins}bins_{num_feats}.csv"
+
+    df_to_file = pd.DataFrame(data={'alphas': alphas,
+                                    'recall': recalls,
+                                    'recall_std': recalls_std,
+                                    'balanced_accuracy': balaccs,
+                                    'balanced_accuracy_std': balaccs_std,
+                                    'fpr': falsepos,
+                                    'fpr_std': falsepos_std,
+                                    'fitting_time': fitting_time,
+                                    'fitting_time_std': fitting_time_std,
+                                    'classification_time': classification_time,
+                                    'classification_time_std': classification_time_std,
+                                    'total_time': total_time,
+                                    'total_time_std': total_time_std})
+    
+    df_to_file.to_csv(csv_path)
 
 if __name__ == "__main__":
     num_feats_list = [4,6,35]
     minbins_list = [1,5]
     dataset_list = ['FtS', 'CLtS', 'ULtS']
     alphas = np.logspace(-8,8,200)
+
+    if not os.path.exists('master_data'):
+        os.mkdir('master_data')
+    os.chdir('master_data')
 
     for num_feats in tqdm(num_feats_list):
         for minbins in tqdm(minbins_list):
