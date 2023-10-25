@@ -69,7 +69,7 @@ def model_runner_linsvm(num_feats, minbins, dataset, Cs):
         predicting_time_list = []
         total_time_list = []
 
-        model = LinearSVC(c=C, class_weight='balanced', max_iter=1000)
+        model = LinearSVC(C=C, class_weight='balanced', max_iter=1000)
 
         for idxs_train, idxs_test in kfold.split(array_feats):
             train_idxs_filtered = []
