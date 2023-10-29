@@ -145,7 +145,7 @@ def model_runner_linsvm(num_feats, minbins, dataset, Cs):
         classification_time_std[Cidx] = np.std(predicting_time_list)
 
         total_time[Cidx] = np.mean(total_time_list)
-        total_time[Cidx] = np.std(total_time_list)
+        total_time_std[Cidx] = np.std(total_time_list)
     
     csv_path = f"LinSVM_{dataset}_{minbins}bins_{num_feats}feats.csv"
 

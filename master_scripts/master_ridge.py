@@ -61,9 +61,6 @@ def model_runner_ridge(num_feats, minbins, dataset, alphas):
     total_time_std = np.zeros_like(alphas)
 
     for alphaidx, alpha in enumerate(tqdm(alphas)):
-        train_score_list = []
-        test_score_list = []
-
         recall_list = []
         balanced_acc_list = []
         fpr_list = []
@@ -145,9 +142,9 @@ def model_runner_ridge(num_feats, minbins, dataset, alphas):
         classification_time_std[alphaidx] = np.std(predicting_time_list)
 
         total_time[alphaidx] = np.mean(total_time_list)
-        total_time[alphaidx] = np.std(total_time_list)
+        total_time_std[alphaidx] = np.std(total_time_list)
     
-    csv_path = f"Ridge_{dataset}_{minbins}bins_{num_feats}.csv"
+    csv_path = f"Ridge_{dataset}_{minbins}bins_{num_feats}feats.csv"
 
     df_to_file = pd.DataFrame(data={'alphas': alphas,
                                     'recall': recalls,

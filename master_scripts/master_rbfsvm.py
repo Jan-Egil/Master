@@ -7,7 +7,7 @@ from time import perf_counter
 
 from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -16,7 +16,7 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, accuracy_score, balanced_accuracy_score
 
-def model_runner_logreg(num_feats, minbins, dataset, Cs):
+def model_runner_rbfsvm(num_feats, minbins, dataset, Cs):
     kfold = KFold(n_splits=5, shuffle=False)
 
     master_df_path = f"/scratch/feats_{dataset}/master_df/master_trainable_fsim_{num_feats}feat"
@@ -69,7 +69,11 @@ def model_runner_logreg(num_feats, minbins, dataset, Cs):
         predicting_time_list = []
         total_time_list = []
 
-        model = LogisticRegression(C=C, class_weight='balanced', max_iter=1000)
+        model = SVC(C=C, 
+                    kernel='rbf', 
+                    class_weight='balanced',
+                    cache_size=1000,
+                    max_iter=500)
 
         for idxs_train, idxs_test in kfold.split(array_feats):
             train_idxs_filtered = []
@@ -147,7 +151,7 @@ def model_runner_logreg(num_feats, minbins, dataset, Cs):
         total_time[Cidx] = np.mean(total_time_list)
         total_time_std[Cidx] = np.std(total_time_list)
     
-    csv_path = f"LogReg_{dataset}_{minbins}bins_{num_feats}feats.csv"
+    csv_path = f"RBFSVM_{dataset}_{minbins}bins_{num_feats}feats.csv"
 
     df_to_file = pd.DataFrame(data={'Cs': Cs,
                                     'recall': recalls,
@@ -178,4 +182,4 @@ if __name__ == "__main__":
     for num_feats in tqdm(num_feats_list):
         for minbins in tqdm(minbins_list):
             for dataset in tqdm(dataset_list):
-                model_runner_logreg(num_feats, minbins, dataset, Cs)
+                model_runner_rbfsvm(num_feats, minbins, dataset, Cs)
