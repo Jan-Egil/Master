@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import pandas as pd
 from tqdm import tqdm
 from sys import platform, exit
@@ -22,30 +21,9 @@ from sklearn.metrics import ConfusionMatrixDisplay
 
 import seaborn as sns
 
-def fetch_magnetometer_data():
-    ...
 
-def fetch_keogram():
-    ...
-
-def fetch_threshold_prediction():
-    os.chdir('master_data')
-
-    best_C_path = "LogReg_CLtS_1bins_6feats.csv"
-    df = pd.read_csv(best_C_path)
-    Cs = np.array(df.Cs)
-    balaccs = np.array(df.balanced_accuracy)
-    best_balacc_idx = np.argmax(balaccs)
-
-
-    C = Cs[best_balacc_idx]
+def threshold_scanner(C, thresholds):
     model = LogisticRegression(C=C, class_weight='balanced', max_iter=10000)
-
-    del df
-    del Cs
-    del balaccs
-    del best_balacc_idx
-    os.chdir('..')
 
     master_df_path = "/scratch/feats_CLtS/master_df/master_trainable_fsim_6feat.h5"
 
@@ -59,9 +37,8 @@ def fetch_threshold_prediction():
     substorm_onset = np.zeros(num_imgs)
     trainable = np.zeros(num_imgs)
     timestamps_list = []
-    print(master_df.columns)
 
-    for i in tqdm(range(num_imgs)):
+    for i in range(num_imgs):
         array_feats[i] = master_df['averaged_feats'][i]
         substorm_onset[i] = master_df['substorm_onset'][i]
         trainable[i] = master_df['trainable'][i]
@@ -93,9 +70,11 @@ def fetch_threshold_prediction():
     for j, test_idx in enumerate(test_idxs_filtered):
         X_test[j] = array_feats[test_idx-29:test_idx+1].flatten()
 
-    clf = model.fit(X_train, Y_train)
 
-    thresholds = np.linspace(0,1,200)
+    clf = model.fit(X_train, Y_train)
+    Y_pred = clf.predict(X_test)
+
+
     balaccs = np.zeros_like(thresholds)
     recalls = np.zeros_like(thresholds)
     FPRs = np.zeros_like(thresholds)
@@ -108,21 +87,62 @@ def fetch_threshold_prediction():
         FPRs[idx] = fp/(fp+tn)
 
     best_balacc_idx = np.argmax(balaccs)
-    best_threshold = thresholds[best_balacc_idx]
-    predicted_probabilities = clf.predict_proba(X_test)[:, 1]
-    predicted_classes = (predicted_probabilities >= best_threshold).astype(int)
-    timestamps_final = timestamps[test_idxs_filtered]
-    return predicted_probabilities, predicted_classes, best_threshold, Y_test, timestamps_final
+    Y_pred_best = (clf.predict_proba(X_test)[:, 1] >= thresholds[best_balacc_idx]).astype(int)
+    return balaccs, recalls, FPRs
+
 
 sns.set_theme()
 
-pred_probs, pred_class, threshold, true_class, timestamp_array = fetch_threshold_prediction()
+"""
+N = 100
+M = 200
+thresholds = np.linspace(0,1,N)
+Cs = np.logspace(-8,8,M)
 
-start = 4000
-stop = 4500
-xformatter = mdates.DateFormatter('%H:%M')
-plt.plot(timestamp_array[start:stop], pred_probs[start:stop])
-#ax.fill_between(timestamp_array[start:stop], pred_probs[start:stop], 1, color='orange', alpha=1)
-plt.axhline(threshold)
-plt.gcf().axes[0].xaxis.set_major_formatter(xformatter)
+balaccs_array = np.zeros([M,N])
+recalls_array = np.zeros_like(balaccs_array)
+fprs_array = np.zeros_like(balaccs_array)
+
+for idx, C in enumerate(tqdm(Cs)):
+    balaccs_array[idx], recalls_array[idx], fprs_array[idx] = threshold_scanner(C, thresholds)
+
+np.save('balaccs_array.npy', balaccs_array)
+np.save('recalls_array.npy', recalls_array)
+np.save('fprs_array.npy', fprs_array)
+np.save('thresholds_array.npy', thresholds)
+np.save('Cs_array.npy', Cs)
+"""
+
+balaccs_array = np.load('balaccs_array.npy')
+recalls_array = np.load('recalls_array.npy')
+fprs_array = np.load('fprs_array.npy')
+thresholds = np.load('thresholds_array.npy')
+Cs = np.load('Cs_array.npy')
+
+print(balaccs_array.shape)
+
+plt.figure()
+plt.contourf(thresholds, Cs, balaccs_array)
+plt.colorbar(cmap='Greys').set_label('Balanced Accuracy', fontsize='large')
+plt.yscale('log')
+plt.xlabel("Threshold", fontsize='large')
+plt.ylabel("Regularization Hyperparameter C", fontsize='large')
+plt.title("Balanced Accuracy\nHyperparameter Plot", fontsize='large')
+
+plt.figure()
+plt.contourf(thresholds, Cs, recalls_array)
+plt.colorbar().set_label('Recall', fontsize='large')
+plt.yscale('log')
+plt.xlabel("Threshold", fontsize='large')
+plt.ylabel("Regularization Hyperparameter C", fontsize='large')
+plt.title("Recall\nHyperparameter Plot", fontsize='large')
+
+plt.figure()
+plt.contourf(thresholds, Cs, fprs_array)
+plt.colorbar().set_label('False Positive Rate', fontsize='large')
+plt.yscale('log')
+plt.xlabel("Threshold", fontsize='large')
+plt.ylabel("Regularization Hyperparameter C", fontsize='large')
+plt.title("False Positive Rate\nHyperparameter Plot", fontsize='large')
+
 plt.show()
