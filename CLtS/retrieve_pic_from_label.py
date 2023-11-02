@@ -19,6 +19,8 @@ df.reset_index()
 n_pic_per_label = 3
 n_labels = len(df['feat_reduced'][0])
 n_imgs = len(df.index)
+print(n_labels)
+print(n_imgs)
 
 
 best_dist_list_full = []
@@ -28,12 +30,13 @@ for label in tqdm(range(n_labels)):
     best_dist_list = []
     best_idx_list = []
     for n_best in tqdm(range(n_pic_per_label)):
-        best_dist = 0
-        for img_label in tqdm(range(n_imgs)):
+        best_dist = df['feat_reduced'][0][label]
+        best_idx = 0
+        for img_label in tqdm(range(1, n_imgs)):
             if img_label in best_idx_list:
                 continue
             dist = df['feat_reduced'][img_label][label]
-            if dist > best_dist:
+            if dist < best_dist:
                 best_dist = dist
                 best_idx = img_label
         best_dist_list.append(best_dist)
@@ -47,12 +50,12 @@ for label in tqdm(range(n_labels)):
 best_dist_array = np.array(best_dist_list_full)
 best_idx_array = np.array(best_idx_list_full)
 
-#np.save('best_dist_array.npy', best_dist_array)
-#np.save('best_idx_array.npy', best_idx_array)
+np.save('best_dist_array.npy', best_dist_array)
+np.save('best_idx_array.npy', best_idx_array)
 
 
-#best_dist_array = np.load('best_dist_array.npy')
-#best_idx_array = np.load('best_idx_array.npy')
+best_dist_array = np.load('best_dist_array.npy')
+best_idx_array = np.load('best_idx_array.npy')
 
 cdf_path = 'temp.cdf'
 key_img = f"thg_asf_fsim"
@@ -111,7 +114,7 @@ for label_num in tqdm(range(n_labels)):
             img = Image.fromarray(img_array*255)
             img = img.resize((224,224))
             img = img.convert("RGB")
-            img.save(f'label_{label_num}_rank_{rank}.png')
+            img.save(f'label_{label_num+1}_rank_{rank+1}.png')
         cdf.close()
         os.remove("temp.cdf")
 
