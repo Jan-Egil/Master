@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set_theme()
 
 num_feats_list = [35,6,4]
 minbins_list = [1,5]
@@ -58,6 +61,12 @@ for dataset in dataset_list:
             print(f"Total time        | {best_total_time:e} ± {best_total_time_std:e}")
             print("")
 
-            plt.plot(Cs, balaccs)
+            if num_feats == 35:
+                plt.plot(Cs ,fitting_time+classification_time, label=f"{dataset} | {minbins}minbin")
 plt.xscale('log')
-#plt.show()
+plt.yscale('log')
+plt.ylabel("Time [s]", fontsize='large')
+plt.xlabel("Hyperparameter C", fontsize='large')
+plt.title("Total time spent against hyperparameter C\nReduced to 35 features")
+plt.legend()
+plt.show()

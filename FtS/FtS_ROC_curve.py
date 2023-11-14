@@ -19,6 +19,10 @@ from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, accuracy_score, balanced_accuracy_score
 from sklearn.metrics import roc_curve, auc, RocCurveDisplay
 
+import seaborn as sns
+
+sns.set_theme()
+
 # Just to get away the vscode-error of the "missing model"
 if 0 == 1:
     model = "lol"
@@ -29,15 +33,15 @@ if 0 == 1:
 
 numfeats = 35 #4, 6 and 35 exists
 minbin = 1 #1 for 1min-bins, 5 for 5min-bins
-lon_lat_sep = 10 #10 and 15 exists
-wegonshuffle = False
+lon_lat_sep = 15 #10 and 15 exists
+wegonshuffle = True
 
 alpha = 8.6e+2
 
 # The models (uncomment the one to try out)
-model = RidgeClassifier(alpha=alpha, class_weight='balanced')       # Decently bad, but fast
+#model = RidgeClassifier(alpha=alpha, class_weight='balanced')       # Decently bad, but fast
 #model = GaussianProcessClassifier()                    # Wait (Can't run due to matrix size)
-#model = SVC(class_weight='balanced')                   # Wait
+model = SVC(class_weight='balanced')                   # Wait
 #model = SVC(class_weight='balanced', kernel="linear", max_iter=1000)   # Wait
 #model = GaussianNB()                                   # Wait
 #model = MLPClassifier()                                # Wait
@@ -124,7 +128,10 @@ tn, fp, fn, tp = confusion_matrix(Y_test, Y_pred).ravel()
 model_fpr = fp/(fp+tn)
 
 RocCurveDisplay.from_estimator(clf, X_test, Y_test)
-plt.plot([0,1], [0,1], "--")
-plt.title(f"ROC Curve for Linear SVM Classifier\n{numfeats} features, {minbin} minute bins", fontsize='x-large')
+plt.plot([0,1], [0,1], "--", label='Random Chance')
+plt.legend()
+plt.xlabel("False Positive Rate", fontsize='large')
+plt.ylabel("True Positive Rate", fontsize='large')
+plt.title(f"ROC Curve for RBF SVM Classifier\nFtS dataset, {numfeats} features, {minbin} minute bins", fontsize='large')
 plt.show()
 

@@ -122,7 +122,7 @@ start = 4000
 stop = 4500
 xformatter = mdates.DateFormatter('%H:%M')
 plt.plot(timestamp_array[start:stop], pred_probs[start:stop])
-#ax.fill_between(timestamp_array[start:stop], pred_probs[start:stop], 1, color='orange', alpha=1)
+#ax.fill_between(timestamp_array[start:stop], pred_probs[start:stop], 1, color='orange', alpha=.5)
 plt.axhline(threshold)
 plt.gcf().axes[0].xaxis.set_major_formatter(xformatter)
 plt.show()
