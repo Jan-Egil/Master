@@ -18,7 +18,6 @@ from torchvision.models import inception_v3, Inception_V3_Weights
 from torchvision.models.feature_extraction import get_graph_node_names
 from torchvision.models.feature_extraction import create_feature_extractor
 
-# IMPORTANT! Remove when done!
 import warnings
 warnings.filterwarnings('ignore')
 
